@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  server:
+    build: ./server/.
+    container_name: server01
+    restart: always
+    environment:
+      - DJANGO_SETTINGS_MODULE=server.settings.deploy
+    command: bash -c "
+      python3 manage.py migrate &&
+      gunicorn --bind unix:/tmp/gunicorn.sock server.wsgi.deploy:application"
+    volumes:
+      - tmp:/tmp/
+    networks:
+      - network
+      - rerev_db_network                  # Internal DB Server
+
+  nginx:
+    build:
+        context: .
+        dockerfile: nginx/Dockerfile
+    container_name: nginx01
+    restart: always
+    depends_on:
+      - server
+    ports:
+      - "80:80"
+      - "443:443"                          # SSL
+    volumes:
+      - tmp:/tmp/
+      - /etc/letsencrypt:/etc/letsencrypt  # SSL
+    networks:
+      - network
+
+  redis:
+    image: redis:7
+    container_name: redis01
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - network
+
+  celery:
+    build: ./server/.
+    container_name: celery01
+    restart: always
+    command: celery -A server worker -l info
+    environment:
+      - DJANGO_SETTINGS_MODULE=server.settings.deploy
+    volumes:
+      - tmp:/tmp/
+    depends_on:
+      - server
+      - redis
+    networks:
+      - network
+
+networks:
+  network:
+  rerev_db_network:                        # Internal DB Server (Remove if External)
+    external: true
+
+volumes:
+  tmp:
+
