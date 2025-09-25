@@ -346,7 +346,7 @@ class SubscriptionRequestListAPIView(APIView):
 
 # 구독 요청 API
 class SubscriptionRequestAPIView(APIView):
-    permission_classes = [IsCIVerified]
+    permission_classes = [IsAuthenticated]
 
     @extend_schema(**SubscriptionSchema.create_subscription_request())
     def post(self, request, car_id):

@@ -18,7 +18,7 @@ class UserManager(BaseUserManager):
 
         uuid8 = uuid.uuid4().hex[:8]
         if not username:
-            username = f"리레브{uuid8}"
+            username = f"rerev{uuid8}"
 
         referral_code = uuid8
         email = self.normalize_email(email)
