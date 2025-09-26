@@ -19,6 +19,7 @@ class Notice(models.Model):
     mobile_img = models.URLField(max_length=500, blank=True, null=True)
     desktop_img = models.URLField(max_length=500, blank=True, null=True)
     detail_img = models.URLField(max_length=500, blank=True, null=True)
+    background_img = models.URLField(max_length=500, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     link = models.URLField(max_length=500, blank=True, null=True)
 
