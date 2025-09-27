@@ -1,18 +1,18 @@
-# buttlers/urls.py
-app_name = 'buttlers'
+# butlers/urls.py
+app_name = 'butlers'
 
 from django.urls import path
 
 from .views import ModelListAPIView, ModelDetailAPIView
 from .views import CarListAPIView, CarDetailAPIView
-from .views import ButtlerAPIView, ButtlerRequestListAPIView, ButtlerRequestAPIView
+from .views import ButlerAPIView, ButlerRequestListAPIView, ButlerRequestAPIView
 from .views import LikeAPIView, ReviewListAPIView, ReviewAPIView, ReviewDetailAPIView, ReviewLikeAPIView
 from .views import ModelRequestAPIView
 from .views import CouponListAPIView, CouponDetailAPIView
 
 urlpatterns = [
-    path('', ButtlerAPIView.as_view(), name='buttler'),
-    path('/requests', ButtlerRequestListAPIView.as_view(), name='buttler-request'),
+    path('', ButlerAPIView.as_view(), name='butler'),
+    path('/requests', ButlerRequestListAPIView.as_view(), name='butler-request'),
     
     path('/models/request', ModelRequestAPIView.as_view(), name='model-request'),                   # 모델 요청
     path('/models', ModelListAPIView.as_view(), name='model-list'),                                 # 모델 목록
@@ -22,7 +22,7 @@ urlpatterns = [
 
     path('/cars', CarListAPIView.as_view(), name='car-list'),                                       # 자동차 목록
     path('/cars/<int:car_id>', CarDetailAPIView.as_view(), name='car-detail'),                      # 자동차 상세
-    path('/cars/<int:car_id>/request', ButtlerRequestAPIView.as_view(), name='add-subscription-request'),# 구독 요청
+    path('/cars/<int:car_id>/request', ButlerRequestAPIView.as_view(), name='add-subscription-request'),# 구독 요청
 
     path('/reviews', ReviewListAPIView.as_view(), name='review-list'),                              # 리뷰 목록
     path('/reviews/<int:review_id>', ReviewDetailAPIView.as_view(), name='review-detail'),          # 리뷰 상세

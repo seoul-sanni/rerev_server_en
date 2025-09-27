@@ -79,8 +79,8 @@ class Car(models.Model):
     inspection_report = models.URLField(blank=True, null=True, verbose_name="Inspection Report")
 
     retail_price = models.IntegerField(verbose_name="Retail Price")
-    release_date = models.DateTimeField(blank=True, null=True, verbose_name="Release Date")
     mileage = models.IntegerField(default=0, verbose_name="Mileage")
+    release_date = models.DateTimeField(blank=True, null=True, verbose_name="Release Date")
 
     is_sellable = models.BooleanField(default=True, verbose_name="Is Sellable")
     sell_price = models.IntegerField(blank=True, null=True, verbose_name="Sell Price")
@@ -100,8 +100,10 @@ class Car(models.Model):
     subscription_fee_minimum = models.IntegerField(blank=True, null=True, verbose_name="Subscription Fee Minimum")
     subscription_available_from = models.DateField(blank=True, null=True, verbose_name="Subscription Available From")
 
-    is_buttler = models.BooleanField(default=False, verbose_name="Is Buttler")
-    buttler_price = models.IntegerField(blank=True, null=True, verbose_name="Buttler Price")
+    is_butler = models.BooleanField(default=False, verbose_name="Is Butler")
+    butler_price = models.IntegerField(blank=True, null=True, verbose_name="Butler Price")
+    butler_reservated_dates = models.JSONField(blank=True, null=True, verbose_name="Butler Reservated Dates")
+    butler_available_from = models.DateField(blank=True, null=True, verbose_name="Butler Available From")
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
     modified_at = models.DateTimeField(auto_now=True, verbose_name="Modified At")
@@ -121,8 +123,8 @@ class Car(models.Model):
         if self.is_sellable and not self.sell_price:
             raise ValidationError({'sell_price': '판매 가능한 차량은 판매 가격이 필수입니다.'})
 
-        if self.is_buttler and not self.buttler_price:
-            raise ValidationError({'buttler_price': '버틀러 서비스가 가능한 차량은 버틀러 수수료가 필수입니다.'})
+        if self.is_butler and not self.butler_price:
+            raise ValidationError({'butler_price': '버틀러 서비스가 가능한 차량은 버틀러 수수료가 필수입니다.'})
 
         if self.is_subscriptable:
             self.update_subscription_fee_minimum()

@@ -1,5 +1,5 @@
-# buttlers/models.py
-app_name = 'buttlers'
+# butlers/models.py
+app_name = 'butlers'
 
 import random, string
 
@@ -12,7 +12,7 @@ from django.core.exceptions import ValidationError
 from accounts.models import User
 from cars.models import Car, Model
 
-class ButtlerCoupon(models.Model):
+class ButlerCoupon(models.Model):
     TYPE_CHOICES = [
         ('PERCENTAGE', 'Percentage'),
         ('FIXED', 'Fixed'),
@@ -58,7 +58,7 @@ class ButtlerCoupon(models.Model):
         characters = string.ascii_uppercase + string.digits
         while True:
             code = ''.join(random.choice(characters) for _ in range(8))
-            if not ButtlerCoupon.objects.filter(code=code).exists():
+            if not ButlerCoupon.objects.filter(code=code).exists():
                 return code
 
     def clean(self):
@@ -132,9 +132,9 @@ class ButtlerCoupon(models.Model):
         return True
 
 
-class ButtlerUserCoupon(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='buttler_user_coupons')
-    coupon = models.ForeignKey(ButtlerCoupon, on_delete=models.CASCADE, related_name='buttler_user_coupons')
+class ButlerUserCoupon(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='butler_user_coupons')
+    coupon = models.ForeignKey(ButlerCoupon, on_delete=models.CASCADE, related_name='butler_user_coupons')
 
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
@@ -143,8 +143,8 @@ class ButtlerUserCoupon(models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        verbose_name = "Buttler User Coupon"
-        verbose_name_plural = "Buttler User Coupons"
+        verbose_name = "Butler User Coupon"
+        verbose_name_plural = "Butler User Coupons"
 
     def __str__(self):
         if self.coupon.discount_type == 'PERCENTAGE':
@@ -186,11 +186,11 @@ class ButtlerUserCoupon(models.Model):
         
         # 이미 같은 사용자가 같은 쿠폰을 가지고 있는지 확인 (새로 생성되는 경우에만)
         if self.pk is None:  # 새로 생성되는 경우에만
-            if ButtlerUserCoupon.objects.filter(user=self.user, coupon=self.coupon, used_at=None).exists():
+            if ButlerUserCoupon.objects.filter(user=self.user, coupon=self.coupon, used_at=None).exists():
                 raise ValidationError("이미 해당 쿠폰을 보유하고 있습니다.")
         
         # 쿠폰의 전체 사용 제한 확인 (현재 레코드 제외)
-        used_count = ButtlerUserCoupon.objects.filter(
+        used_count = ButlerUserCoupon.objects.filter(
             coupon=self.coupon,
         ).exclude(pk=self.pk).count()
         
@@ -198,7 +198,7 @@ class ButtlerUserCoupon(models.Model):
             raise ValidationError(f"이 쿠폰은 이미 최대 사용 횟수({self.coupon.usage_limit}회)에 도달했습니다.")
         
         # 사용자당 사용 제한 확인 (현재 레코드 제외)
-        user_used_count = ButtlerUserCoupon.objects.filter(
+        user_used_count = ButlerUserCoupon.objects.filter(
             user=self.user,
             coupon=self.coupon,
         ).exclude(pk=self.pk).count()
@@ -211,19 +211,18 @@ class ButtlerUserCoupon(models.Model):
         super().save(*args, **kwargs)
 
 
-class ButtlerRequest(models.Model):
+class ButlerRequest(models.Model):
     id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='buttler_requests')
-    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name='buttler_requests')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='butler_requests')
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name='butler_requests')
 
     start_at = models.DateTimeField(verbose_name="Start At", null=True, blank=True)
     start_location = models.CharField(max_length=255, verbose_name="Start Location")
-    way_point = models.JSONField(verbose_name="Way Point", default=list, blank=True)
     end_at = models.DateTimeField(verbose_name="End At", null=True, blank=True)
-    end_location = models.CharField(max_length=255, verbose_name="End Location", null=True, blank=True)
+    end_location = models.CharField(max_length=255, verbose_name="End Location")
 
-    coupon = models.ForeignKey(ButtlerUserCoupon, on_delete=models.CASCADE, related_name='buttler_requests', null=True, blank=True)
-    point = models.ForeignKey('users.PointTransaction', on_delete=models.CASCADE, related_name='buttler_requests', null=True, blank=True)
+    coupon = models.ForeignKey(ButlerUserCoupon, on_delete=models.CASCADE, related_name='butler_requests', null=True, blank=True)
+    point = models.ForeignKey('users.PointTransaction', on_delete=models.CASCADE, related_name='butler_requests', null=True, blank=True)
 
     payment_id = models.CharField(max_length=255, null=True, blank=True)
 
@@ -233,8 +232,8 @@ class ButtlerRequest(models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        verbose_name = "Buttler Request"
-        verbose_name_plural = "Buttler Requests"
+        verbose_name = "Butler Request"
+        verbose_name_plural = "Butler Requests"
         unique_together = [('user', 'coupon'), ('user', 'point')]
 
     def clean(self):
@@ -242,25 +241,36 @@ class ButtlerRequest(models.Model):
             if self.coupon.user != self.user:
                 raise ValidationError("쿠폰의 소유자와 요청자가 다릅니다.")
     
-        if self.start_at and self.end_at and self.start_at >= self.end_at:
-            raise ValidationError("시작일은 종료일보다 이전이어야 합니다.")
-    
     def save(self, *args, **kwargs):
         if not self.start_at:
             self.start_at = timezone.now()
         
-        # end_at이 설정되지 않은 경우 start_at + 10시간으로 기본 설정
         if not self.end_at:
             self.end_at = self.start_at + timedelta(hours=10)
         
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.user.name} - {self.car.model.brand.name} {self.car.model.name} - ({self.start_location} {self.start_at})"
+        return f"{self.user.name} - {self.start_location} {self.start_at} ~ {self.end_location} {self.end_at} - {self.car.model.brand.name} {self.car.model.name})"
 
 
-class Buttler(models.Model):
-    request = models.ForeignKey(ButtlerRequest, on_delete=models.CASCADE, related_name='buttlers')
+class ButlerWayPoint(models.Model):
+    butler_request = models.ForeignKey(ButlerRequest, on_delete=models.CASCADE, related_name='butler_way_points')
+    address = models.CharField(max_length=255)
+    scheduled_time = models.DateTimeField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Butler Way Point"
+        verbose_name_plural = "Butler Way Points"
+
+
+class Butler(models.Model):
+    request = models.ForeignKey(ButlerRequest, on_delete=models.CASCADE, related_name='butlers')
     
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
     modified_at = models.DateTimeField(auto_now=True, verbose_name="Modified At")
@@ -268,18 +278,18 @@ class Buttler(models.Model):
     is_active = models.BooleanField(default=True, verbose_name="Is Active")
     
     class Meta:
-        verbose_name = "Buttler"
-        verbose_name_plural = "Buttlers"
+        verbose_name = "Butler"
+        verbose_name_plural = "Butlers"
         ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.request.user.username} - {self.request.car.model.brand.name} {self.request.car.model.name} ({self.request.start_at} ~ {self.request.end_at})"
 
 
-class ButtlerLike(models.Model):
+class ButlerLike(models.Model):
     id = models.AutoField(primary_key=True)
-    model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='buttler_likes')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='buttler_likes')
+    model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='butler_likes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='butler_likes')
     
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -292,10 +302,10 @@ class ButtlerLike(models.Model):
         return f"{self.user.username} likes {self.model.brand.name} {self.model.name}"
     
 
-class ButtlerReview(models.Model):
+class ButlerReview(models.Model):
     id = models.AutoField(primary_key=True)
-    model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='buttler_reviews')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='buttler_reviews')
+    model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='butler_reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='butler_reviews')
 
     content = models.TextField()
     image = models.CharField(max_length=255, blank=True, null=True)
@@ -319,10 +329,10 @@ class ButtlerReview(models.Model):
         ordering = ['-id']
 
 
-class ButtlerReviewLike(models.Model):
+class ButlerReviewLike(models.Model):
     id = models.AutoField(primary_key=True)
-    review = models.ForeignKey(ButtlerReview, on_delete=models.CASCADE, related_name='buttler_review_likes')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='buttler_review_likes')
+    review = models.ForeignKey(ButlerReview, on_delete=models.CASCADE, related_name='butler_review_likes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='butler_review_likes')
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -335,9 +345,9 @@ class ButtlerReviewLike(models.Model):
         return f"{self.user.username} likes Review {self.review.id}"
 
 
-class ButtlerModelRequest(models.Model):
+class ButlerModelRequest(models.Model):
     id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='buttler_model_requests')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='butler_model_requests')
     model = models.TextField(verbose_name="Model")
 
     created_at = models.DateTimeField(auto_now_add=True)

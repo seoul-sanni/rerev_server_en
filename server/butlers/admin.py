@@ -1,13 +1,13 @@
-# buttlers/admin.py
-app_name = 'buttlers'
+# butlers/admin.py
+app_name = 'butlers'
 
 from django.contrib import admin
 
-from .models import Buttler, ButtlerRequest, ButtlerReview, ButtlerLike, ButtlerReviewLike, ButtlerModelRequest, ButtlerCoupon, ButtlerUserCoupon
+from .models import Butler, ButlerRequest, ButlerWayPoint, ButlerReview, ButlerLike, ButlerReviewLike, ButlerModelRequest, ButlerCoupon, ButlerUserCoupon
 
-@admin.register(ButtlerRequest)
-class ButtlerRequestAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user', 'car', 'start_at', 'start_location', 'way_point', 'end_at', 'end_location', 'created_at', 'modified_at', 'coupon', 'point', 'is_active']
+@admin.register(ButlerRequest)
+class ButlerRequestAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'car', 'start_at', 'start_location', 'end_at', 'end_location', 'created_at', 'modified_at', 'coupon', 'point', 'is_active']
     list_filter = ['created_at', 'modified_at', 'is_active']
     search_fields = ['user__username', 'user__email', 'car__model__name', 'car__model__brand__name', 'car__vin_number']
     readonly_fields = ['created_at', 'modified_at']
@@ -16,7 +16,7 @@ class ButtlerRequestAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Basic Information', {
-            'fields': ('user', 'car', 'start_at', 'start_location', 'way_point', 'end_at', 'end_location')
+            'fields': ('user', 'car', 'start_at', 'start_location', 'end_at', 'end_location')
         }),
         ('Coupon Information', {
             'fields': ('coupon',)
@@ -40,10 +40,38 @@ class ButtlerRequestAdmin(admin.ModelAdmin):
         return super().get_queryset(request).select_related(
             'user', 'car', 'car__model', 'car__model__brand', 'coupon', 'coupon__coupon', 'point'
         )
-        
 
-@admin.register(Buttler)
-class ButtlerAdmin(admin.ModelAdmin):
+
+@admin.register(ButlerWayPoint)
+class WayPointAdmin(admin.ModelAdmin):
+    list_display = ['id', 'butler_request', 'address', 'scheduled_time', 'is_active', 'created_at', 'modified_at']
+    list_filter = ['is_active', 'created_at', 'modified_at', 'scheduled_time']
+    search_fields = ['address', 'butler_request__user__username', 'butler_request__user__email', 'butler_request__car__model__name', 'butler_request__car__model__brand__name']
+    readonly_fields = ['created_at', 'modified_at']
+    autocomplete_fields = ['butler_request']
+    list_editable = ['is_active']
+    
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('butler_request', 'address', 'scheduled_time')
+        }),
+        ('Status Information', {
+            'fields': ('is_active',)
+        }),
+        ('System Information', {
+            'fields': ('created_at', 'modified_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'butler_request', 'butler_request__user', 'butler_request__car', 'butler_request__car__model', 'butler_request__car__model__brand'
+        )
+
+
+@admin.register(Butler)
+class ButlerAdmin(admin.ModelAdmin):
     list_display = ['id', 'request', 'created_at', 'modified_at', 'is_active']
     list_filter = ['is_active', 'created_at', 'modified_at']
     search_fields = ['request__user__username', 'request__user__email', 'request__car__model__name', 'request__car__model__brand__name', 'request__car__vin_number']
@@ -69,8 +97,8 @@ class ButtlerAdmin(admin.ModelAdmin):
         )
 
 
-@admin.register(ButtlerLike)
-class ButtlerLikeAdmin(admin.ModelAdmin):
+@admin.register(ButlerLike)
+class ButlerLikeAdmin(admin.ModelAdmin):
     list_display = ['id', 'user', 'model', 'created_at']
     list_filter = ['created_at']
     search_fields = ['user__username', 'user__email', 'model__name', 'model__brand__name']
@@ -93,8 +121,8 @@ class ButtlerLikeAdmin(admin.ModelAdmin):
         )
 
 
-@admin.register(ButtlerReview)
-class ButtlerReviewAdmin(admin.ModelAdmin):
+@admin.register(ButlerReview)
+class ButlerReviewAdmin(admin.ModelAdmin):
     list_display = ['id', 'user', 'model', 'content_preview', 'is_verified', 'is_active', 'created_at']
     list_filter = ['is_verified', 'is_active', 'created_at', 'modified_at']
     search_fields = ['user__username', 'user__email', 'model__name', 'model__brand__name', 'content']
@@ -125,8 +153,8 @@ class ButtlerReviewAdmin(admin.ModelAdmin):
         )
 
 
-@admin.register(ButtlerReviewLike)
-class ButtlerReviewLikeAdmin(admin.ModelAdmin):
+@admin.register(ButlerReviewLike)
+class ButlerReviewLikeAdmin(admin.ModelAdmin):
     list_display = ['id', 'user', 'review', 'created_at']
     list_filter = ['created_at']
     search_fields = ['user__username', 'user__email', 'review__content', 'review__model__name']
@@ -149,8 +177,8 @@ class ButtlerReviewLikeAdmin(admin.ModelAdmin):
         )
 
 
-@admin.register(ButtlerModelRequest)
-class ButtlerModelRequestAdmin(admin.ModelAdmin):
+@admin.register(ButlerModelRequest)
+class ButlerModelRequestAdmin(admin.ModelAdmin):
     list_display = ['id', 'user', 'user__name', 'user__mobile', 'model', 'created_at', 'modified_at', 'is_active']
     list_filter = ['created_at', 'modified_at', 'is_active']
     search_fields = ['user__name', 'user__mobile', 'model']
@@ -171,8 +199,8 @@ class ButtlerModelRequestAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(ButtlerCoupon)
-class ButtlerCouponAdmin(admin.ModelAdmin):
+@admin.register(ButlerCoupon)
+class ButlerCouponAdmin(admin.ModelAdmin):
     list_display = ['id', 'code', 'name', 'description', 'discount_type', 'discount_rate', 'max_discount', 'discount', 'valid_from', 'valid_to', 'is_active']
     list_filter = ['is_active', 'valid_from', 'valid_to', 'discount_type']
     search_fields = ['code', 'name', 'description']
@@ -199,8 +227,8 @@ class ButtlerCouponAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(ButtlerUserCoupon)
-class ButtlerUserCouponAdmin(admin.ModelAdmin):
+@admin.register(ButlerUserCoupon)
+class ButlerUserCouponAdmin(admin.ModelAdmin):
     list_display = ['id', 'user', 'coupon', 'is_active', 'is_used', 'is_valid', 'created_at', 'used_at']
     list_filter = ['is_active', 'created_at', 'used_at', 'coupon__discount_type']
     search_fields = ['user__username', 'user__email', 'coupon__code', 'coupon__name']

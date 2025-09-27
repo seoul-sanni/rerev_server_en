@@ -1,9 +1,9 @@
 from django.apps import AppConfig
 
 
-class ButtlersConfig(AppConfig):
+class ButlersConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'buttlers'
+    name = 'butlers'
 
     def ready(self):
-        import buttlers.signals
+        import butlers.signals

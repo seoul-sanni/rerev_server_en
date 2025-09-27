@@ -1,5 +1,5 @@
-# subscriptions/serializers.py
-app_name = 'subscriptions'
+# butlers/serializers.py
+app_name = 'butlers'
 
 from rest_framework import serializers
 
@@ -9,92 +9,56 @@ from cars.models import Brand, Model, Car
 from users.models import PointTransaction
 from accounts.models import User
 
-from .models import Buttler, ButtlerRequest, ButtlerReview, ButtlerModelRequest, ButtlerCoupon, ButtlerUserCoupon
+from .models import Butler, ButlerRequest, ButlerWayPoint, ButlerReview, ButlerModelRequest, ButlerCoupon, ButlerUserCoupon
 
 # Default Serializer
 # <-------------------------------------------------------------------------------------------------------------------------------->
-class ButtlerBrandSerializer(serializers.ModelSerializer):
+class ButlerBrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brand
-        fields = ['id', 'name', 'image']
+        fields = ['id', 'name', 'slug', 'image']
 
 
-class ButtlerModelSerializer(serializers.ModelSerializer):
-    brand = ButtlerBrandSerializer(read_only=True)
+class ButlerModelSerializer(serializers.ModelSerializer):
+    brand = ButlerBrandSerializer(read_only=True)
 
     class Meta:
         model = Model
-        fields = ['id', 'brand', 'name', 'image', 'code']
+        fields = ['id', 'brand', 'name', 'code', 'image', 'front_image', 'rear_image', 'slug']
 
 
 # Car Serializer
 # <-------------------------------------------------------------------------------------------------------------------------------->
-class SimpleButtlerCarSerializer(serializers.ModelSerializer):
-    model = ButtlerModelSerializer(read_only=True)
+class SimpleButlerCarSerializer(serializers.ModelSerializer):
+    model = ButlerModelSerializer(read_only=True)
 
     class Meta:
         model = Car
-        fields = ['id', 'model', 'vin_number', 'license_plate', 'description', 'images', 'retail_price', 'release_date', 'mileage', 'is_new', 'is_hot',
-        'is_subscriptable', 'subscription_fee_1', 'subscription_fee_3', 'subscription_fee_6', 'subscription_fee_12', 'subscription_fee_24',
-        'subscription_fee_36', 'subscription_fee_48', 'subscription_fee_60', 'subscription_fee_72', 'subscription_fee_84', 'subscription_fee_96',
+        fields = ['id', 'model', 'sub_model', 'trim', 'color', 'vin_number', 'license_plate', 'description', 'images', 'inspection_report', 'retail_price', 'release_date', 'mileage', 'is_new', 'is_hot',
+        'is_butler', 'butler_price', 'butler_reservated_dates', 'butler_available_from'
         ]
 
 
-class ButtlerCarSerializer(serializers.ModelSerializer):
-    buttler_info = serializers.SerializerMethodField()
-    buttler_request_info = serializers.SerializerMethodField()
-    
+class ButlerCarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Car
-        fields = ['id', 'vin_number', 'license_plate', 'description', 'images', 'retail_price', 'release_date', 'mileage', 'is_new', 'is_hot',
-        'is_subscriptable', 'subscription_fee_1', 'subscription_fee_3', 'subscription_fee_6', 'subscription_fee_12', 'subscription_fee_24',
-        'subscription_fee_36', 'subscription_fee_48', 'subscription_fee_60', 'subscription_fee_72', 'subscription_fee_84', 'subscription_fee_96',
-        'buttler_info', 'buttler_request_info'
+        fields = ['id', 'sub_model', 'trim', 'color', 'vin_number', 'license_plate', 'description', 'images', 'inspection_report', 'retail_price', 'release_date', 'mileage', 'is_new', 'is_hot',
+        'is_butler', 'butler_price', 'butler_reservated_dates', 'butler_available_from'
         ]
-    
-    def get_buttler_info(self, obj):
-        now = timezone.now().date()  # datetime.date로 변환
-        buttler_list = []
-        
-        for buttler_request in obj.buttler_requests.filter(end_at__gte=now, is_active=False):
-            buttler_list.append({
-                'buttler_start': buttler_request.start_at,
-                'buttler_end': buttler_request.end_at,
-            })
-        
-        if buttler_list:
-            return buttler_list
-
-        return None
-
-    def get_buttler_request_info(self, obj):
-        now = timezone.now().date()  # datetime.date로 변환
-        buttler_request_list = []
-        
-        for buttler_request in obj.buttler_requests.filter(end_at__gte=now, is_active=True):
-            buttler_request_list.append({
-                'buttler_start': buttler_request.start_at,
-                'buttler_end': buttler_request.end_at,
-            })
-
-        if buttler_request_list:
-            return buttler_request_list
-        
-        return None
 
 
-class ButtlerCarDetailSerializer(ButtlerCarSerializer):
-    model = ButtlerModelSerializer(read_only=True)
+class ButlerCarDetailSerializer(ButlerCarSerializer):
+    model = ButlerModelSerializer(read_only=True)
     
     class Meta:
         model = Car
-        fields = ButtlerCarSerializer.Meta.fields + ['model']
+        fields = ButlerCarSerializer.Meta.fields + ['model']
 
 
 # Model Serializer
 # <-------------------------------------------------------------------------------------------------------------------------------->
-class ButtlerModelListSerializer(serializers.ModelSerializer):
-    brand = ButtlerBrandSerializer(read_only=True)
+class ButlerModelListSerializer(serializers.ModelSerializer):
+    brand = ButlerBrandSerializer(read_only=True)
     car = serializers.SerializerMethodField()
     
     class Meta:
@@ -109,44 +73,50 @@ class ButtlerModelListSerializer(serializers.ModelSerializer):
         return None
     
     def get_car_serializer(self):
-        return ButtlerCarSerializer
+        return ButlerCarSerializer
 
 
-class ButtlerModelDetailSerializer(ButtlerModelListSerializer):
+class ButlerModelDetailSerializer(ButlerModelListSerializer):
     def get_car_serializer(self):
-        return ButtlerCarSerializer
+        return ButlerCarSerializer
 
 
 # Coupon Serializer
 # <-------------------------------------------------------------------------------------------------------------------------------->
-class ButtlerCouponSerializer(serializers.ModelSerializer):
+class ButlerCouponSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ButtlerCoupon
+        model = ButlerCoupon
         fields = ['id', 'code', 'name', 'description', 'brand_ids', 'model_ids', 'car_ids', 'discount_type', 'discount_rate', 'max_discount', 'discount', 'min_price', 'max_price', 'valid_from', 'valid_to', 'is_specific']
         read_only_fields = ['id', 'code', 'created_at', 'modified_at']
 
 
-class ButtlerUserCouponSerializer(serializers.ModelSerializer):
-    coupon = ButtlerCouponSerializer(read_only=True)
+class ButlerUserCouponSerializer(serializers.ModelSerializer):
+    coupon = ButlerCouponSerializer(read_only=True)
 
     class Meta:
-        model = ButtlerUserCoupon
+        model = ButlerUserCoupon
         fields = ['id', 'user', 'coupon', 'is_active', 'is_used', 'is_valid', 'created_at', 'used_at']
         read_only_fields = ['id', 'user', 'coupon', 'is_used', 'is_valid', 'created_at', 'modified_at', 'used_at']
 
 
-# Subscription Serializer
+# Butler Serializer
 # <-------------------------------------------------------------------------------------------------------------------------------->
-class ButtlerRequestSerializer(serializers.ModelSerializer):
-    car = SimpleButtlerCarSerializer(read_only=True)
+class ButlerRequestWayPointSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ButlerWayPoint
+        fields = ['id', 'address', 'scheduled_time']
+
+
+class ButlerRequestSerializer(serializers.ModelSerializer):
+    car = SimpleButlerCarSerializer(read_only=True)
     coupon_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
-    coupon = ButtlerUserCouponSerializer(read_only=True)
+    coupon = ButlerUserCouponSerializer(read_only=True)
     point_amount = serializers.IntegerField(write_only=True, required=False, allow_null=True)
     point_used = serializers.SerializerMethodField(read_only=True)
     payment_id = serializers.CharField(write_only=True, required=False, allow_null=True)
     
     class Meta:
-        model = ButtlerRequest
+        model = ButlerRequest
         fields = ['id', 'user', 'car', 'start_at', 'end_at', 'point_used', 'created_at', 'modified_at', 'coupon_id', 'coupon', 'is_active', 'point_amount', 'payment_id']
         read_only_fields = ['id', 'user', 'car', 'point_used', 'end_at', 'created_at', 'modified_at', 'coupon', 'is_active']
     
@@ -166,38 +136,38 @@ class ButtlerRequestSerializer(serializers.ModelSerializer):
         if coupon_id is not None:
             try:
                 user = validated_data.get('user')
-                user_coupon = ButtlerUserCoupon.objects.get(id=coupon_id, user=user, is_active=True, used_at__isnull=True)
+                user_coupon = ButlerUserCoupon.objects.get(id=coupon_id, user=user, is_active=True, used_at__isnull=True)
                 
                 if not user_coupon.is_valid:
                     raise serializers.ValidationError("Invalid or expired coupon")
 
-            except ButtlerUserCoupon.DoesNotExist:
+            except ButlerUserCoupon.DoesNotExist:
                 raise serializers.ValidationError("Invalid or expired coupon")
         
-        buttler_request = ButtlerRequest.objects.create(**validated_data, coupon=user_coupon)        
-        return buttler_request
+        butler_request = ButlerRequest.objects.create(**validated_data, coupon=user_coupon)        
+        return butler_request
 
 
-class ButtlerSerializer(serializers.ModelSerializer):
-    request = ButtlerRequestSerializer(read_only=True)
+class ButlerSerializer(serializers.ModelSerializer):
+    request = ButlerRequestSerializer(read_only=True)
 
     class Meta:
-        model = Buttler
+        model = Butler
         fields = ['id', 'request', 'created_at', 'modified_at', 'is_active']
         read_only_fields = ['id', 'request', 'created_at', 'modified_at', 'is_active']
 
 
 # Review Serializer
 # <-------------------------------------------------------------------------------------------------------------------------------->
-class ButtlerReviewUserSerializer(serializers.ModelSerializer):
+class ButlerReviewUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'profile_image']
 
 
-class ButtlerReviewSerializer(serializers.ModelSerializer):
+class ButlerReviewSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ButtlerReview
+        model = ButlerReview
         fields = [
             'id', 'content', 'image', 'user', 'model',
             'created_at', 'modified_at', 'is_active', 'is_verified'
@@ -205,38 +175,38 @@ class ButtlerReviewSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'user', 'model', 'created_at', 'modified_at', 'is_active', 'is_verified']
 
 
-class ButtlerReviewDetailSerializer(ButtlerReviewSerializer):
+class ButlerReviewDetailSerializer(ButlerReviewSerializer):
     user = serializers.SerializerMethodField()
     model = serializers.SerializerMethodField()
     likes = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
 
-    class Meta(ButtlerReviewSerializer.Meta):
-        fields = ButtlerReviewSerializer.Meta.fields + ['likes', 'is_liked']
-        read_only_fields = ButtlerReviewSerializer.Meta.read_only_fields + ['likes', 'is_liked']
+    class Meta(ButlerReviewSerializer.Meta):
+        fields = ButlerReviewSerializer.Meta.fields + ['likes', 'is_liked']
+        read_only_fields = ButlerReviewSerializer.Meta.read_only_fields + ['likes', 'is_liked']
 
     def get_user(self, obj):
-        return ButtlerReviewUserSerializer(obj.user).data
+        return ButlerReviewUserSerializer(obj.user).data
 
     def get_model(self, obj):
-        return ButtlerModelDetailSerializer(obj.model).data
+        return ButlerModelDetailSerializer(obj.model).data
     
     def get_likes(self, obj):
-        return obj.buttler_review_likes.count()
+        return obj.butler_review_likes.count()
 
     def get_is_liked(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return obj.buttler_review_likes.filter(user=request.user).exists()
+            return obj.butler_review_likes.filter(user=request.user).exists()
         return False
 
 
-class ButtlerReviewListSerializer(ButtlerReviewDetailSerializer):
+class ButlerReviewListSerializer(ButlerReviewDetailSerializer):
     content = serializers.SerializerMethodField()
 
-    class Meta(ButtlerReviewDetailSerializer.Meta):
-        fields = ButtlerReviewDetailSerializer.Meta.fields
-        read_only_fields = ButtlerReviewDetailSerializer.Meta.read_only_fields
+    class Meta(ButlerReviewDetailSerializer.Meta):
+        fields = ButlerReviewDetailSerializer.Meta.fields
+        read_only_fields = ButlerReviewDetailSerializer.Meta.read_only_fields
 
     def get_content(self, obj):
         if obj.content:
@@ -246,8 +216,8 @@ class ButtlerReviewListSerializer(ButtlerReviewDetailSerializer):
 
 # Model Request Serializer
 # <-------------------------------------------------------------------------------------------------------------------------------->
-class ButtlerModelRequestSerializer(serializers.ModelSerializer):
+class ButlerModelRequestSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ButtlerModelRequest
+        model = ButlerModelRequest
         fields = ['id', 'user', 'model', 'created_at', 'modified_at', 'is_active']
         read_only_fields = ['id', 'user', 'created_at', 'modified_at', 'is_active']

@@ -43,12 +43,12 @@ class ModelAdmin(admin.ModelAdmin):
 
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
-    list_display = ['id', 'model', 'sub_model', 'license_plate', 'is_sellable', 'is_subscriptable', 'is_buttler', 'is_new', 'is_hot', 'is_active']
+    list_display = ['id', 'model', 'sub_model', 'license_plate', 'is_sellable', 'is_subscriptable', 'is_butler', 'is_new', 'is_hot', 'is_active']
     list_filter = ['is_sellable', 'is_subscriptable', 'is_new', 'is_hot', 'is_active', 'release_date', 'created_at', 'modified_at']
     search_fields = ['vin_number', 'license_plate', 'model__name', 'model__brand__name', 'description']
-    readonly_fields = ['subscription_fee_minimum', 'subscription_available_from', 'created_at', 'modified_at']
+    readonly_fields = ['subscription_fee_minimum', 'subscription_available_from', 'butler_reservated_dates', 'butler_available_from', 'created_at', 'modified_at']
     autocomplete_fields = ['model']
-    list_editable = ['is_sellable', 'is_subscriptable', 'is_buttler', 'is_new', 'is_hot', 'is_active']
+    list_editable = ['is_sellable', 'is_subscriptable', 'is_butler', 'is_new', 'is_hot', 'is_active']
     
     fieldsets = (
         ('Basic Information', {
@@ -66,8 +66,8 @@ class CarAdmin(admin.ModelAdmin):
             'subscription_fee_minimum', 'subscription_available_from'
             )
         }),
-        ('Buttler Information', {
-            'fields': ('is_buttler', 'buttler_price')
+        ('Butler Information', {
+            'fields': ('is_butler', 'butler_price', 'butler_reservated_dates', 'butler_available_from')
         }),
         ('System Information', {
             'fields': ('is_new', 'is_hot', 'is_active', 'created_at', 'modified_at'),

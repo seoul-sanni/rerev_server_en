@@ -6,16 +6,9 @@ from datetime import timedelta
 from django.db import models
 from django.utils import timezone
 
-from cars.models import Car
-
 from .models import Subscription, SubscriptionRequest
 
-def update_subscription_available_from(car_id):
-    try:
-        car = Car.objects.get(id=car_id)
-    except Car.DoesNotExist:
-        return
-        
+def get_subscription_available_from(car):
     now = timezone.now().date()
     latest_end_date = None
     
@@ -33,9 +26,9 @@ def update_subscription_available_from(car_id):
                 latest_end_date = latest_request_end
     
     if latest_end_date is None:
-        car.subscription_available_from = None
+        subscription_available_from = None
 
     else:
-        car.subscription_available_from = latest_end_date + timedelta(days=1)
+        subscription_available_from = latest_end_date + timedelta(days=1)
 
-    car.save()
+    return subscription_available_from
