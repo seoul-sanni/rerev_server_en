@@ -7,7 +7,6 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from django.utils import timezone
 from django.db.models import Prefetch, Q
 
 from drf_spectacular.utils import extend_schema
@@ -17,13 +16,98 @@ from cars.models import Brand, Model, Car
 
 from .task import send_butler_email
 from .models import Butler, ButlerRequest, ButlerLike, ButlerReview, ButlerReviewLike, ButlerCoupon, ButlerUserCoupon
-from .serializers import ButlerModelListSerializer, ButlerModelDetailSerializer, ButlerCarDetailSerializer
+from .serializers import ButlerModelListSerializer, ButlerModelDetailSerializer, ButlerCarDetailSerializer, SimpleButlerModelSerializer
 from .serializers import ButlerSerializer, ButlerRequestSerializer
 from .serializers import ButlerReviewSerializer, ButlerReviewDetailSerializer, ButlerModelRequestSerializer
 from .serializers import ButlerCouponSerializer, ButlerUserCouponSerializer
 from .permissions import AllowAny, IsAuthenticated, IsCIVerified, IsAuthor, IsButlered
 from .paginations import ButlerPagination
 from .schemas import GarageSchema, CouponSchema, ButlerSchema, ReviewSchema
+
+# Garage APIs
+# <-------------------------------------------------------------------------------------------------------------------------------->
+# Garage 목록을 조회하는 API
+class GarageAPIView(APIView):
+    permission_classes = [AllowAny]
+    pagination_class = ButlerPagination
+
+    @extend_schema(**GarageSchema.get_garage())
+    def get(self, request):
+        brand_model_dict = defaultdict(list)
+        for model in Model.objects.select_related('brand').all():
+            brand_model_dict[model.brand].append(model)
+        
+        garage_list = []
+        for brand, models in brand_model_dict.items():
+            garage_item = {
+                'name': brand.name,
+                'slug': brand.slug,
+                'model_list': SimpleButlerModelSerializer(models, many=True).data
+            }
+            garage_list.append(garage_item)
+        
+        brands = request.query_params.getlist('brand')
+        models = request.query_params.getlist('model')
+        dates = request.query_params.getlist('date')
+        order = request.query_params.get('order')
+
+        try:
+            cars_queryset = Car.objects.filter(is_active=True, is_butler=True).select_related('model', 'model__brand')
+
+            # (brand OR model) AND (date)
+            if brands or models:
+                filter_conditions = Q()
+                if brands:
+                    filter_conditions |= Q(model__brand__slug__in=brands)
+                if models:
+                    filter_conditions |= Q(model__slug__in=models)
+                cars_queryset = cars_queryset.filter(filter_conditions)
+            
+            if dates:
+                exclude_conditions = Q()
+                for date in dates:
+                    exclude_conditions |= Q(butler_reservated_dates__contains=[date])
+                cars_queryset = cars_queryset.exclude(exclude_conditions)
+            
+            if order == 'desc':
+                sort_field = f'-{'butler_price'}'
+            else:
+                sort_field = 'butler_price'
+
+            cars_queryset = cars_queryset.order_by(sort_field)
+            
+            paginator = self.pagination_class()
+            page = paginator.paginate_queryset(cars_queryset, request)
+            if page is not None:
+                pagination_info = {
+                    'count': paginator.page.paginator.count,
+                    'next': paginator.get_next_link(),
+                    'previous': paginator.get_previous_link(),
+                    'page_size': paginator.page_size,
+                    'current_page': paginator.page.number,
+                    'total_pages': paginator.page.paginator.num_pages
+                }
+
+                response_data = {
+                    'garage_list': garage_list,
+                    'cars': ButlerCarDetailSerializer(page, many=True).data,
+                    'pagination_info': pagination_info
+                }
+                response = SuccessResponseBuilder().with_message("차고 목록 조회 성공").with_data(response_data).build()
+                return Response(response, status=status.HTTP_200_OK)
+                
+            else:
+                response_data = {
+                    'garage_list': garage_list,
+                    'cars': ButlerCarDetailSerializer(cars_queryset, many=True).data,
+                }    
+                response = SuccessResponseBuilder().with_message("차고 목록 조회 성공").with_data(response_data).build()
+                return Response(response, status=status.HTTP_200_OK)
+                
+        except Exception as e:
+            response = ErrorResponseBuilder().with_message("차고 목록을 불러오는 중 오류가 발생했습니다.").with_errors(str(e)).build()
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 # 버틀러 가능한 자동차 모델 목록을 조회하는 API
 class ModelListAPIView(APIView):
@@ -194,7 +278,7 @@ class ButlerRequestAPIView(APIView):
             serializer = ButlerRequestSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save(user=request.user, car_id=car_id)
-                send_butler_email("seobioh@gmail.com", serializer.data)   # send_verification_email.delay(target, verification_code) for celery
+                send_butler_email.delay("seobioh@gmail.com", serializer.data)
                 response = SuccessResponseBuilder().with_message("버틀러 요청 추가 성공").with_data({'butler_request': serializer.data}).build()
                 return Response(response, status=status.HTTP_201_CREATED)
             else:

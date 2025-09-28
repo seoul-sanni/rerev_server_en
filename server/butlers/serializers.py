@@ -19,6 +19,17 @@ class ButlerBrandSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'slug', 'image']
 
 
+class SimpleButlerModelSerializer(serializers.ModelSerializer):
+    car_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Model
+        fields = ['id', 'name', 'image', 'front_image', 'rear_image', 'code', 'slug', 'car_count']
+    
+    def get_car_count(self, obj):
+        return obj.cars.filter(is_active=True, is_butler=True).count()
+
+
 class ButlerModelSerializer(serializers.ModelSerializer):
     brand = ButlerBrandSerializer(read_only=True)
 
@@ -34,7 +45,7 @@ class SimpleButlerCarSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Car
-        fields = ['id', 'model', 'sub_model', 'trim', 'color', 'vin_number', 'license_plate', 'description', 'images', 'inspection_report', 'retail_price', 'release_date', 'mileage', 'is_new', 'is_hot',
+        fields = ['id', 'model', 'sub_model', 'trim', 'color', 'license_plate', 'description', 'images', 'retail_price', 'release_date', 'mileage', 'is_new', 'is_hot',
         'is_butler', 'butler_price', 'butler_reservated_dates', 'butler_available_from'
         ]
 
@@ -42,7 +53,7 @@ class SimpleButlerCarSerializer(serializers.ModelSerializer):
 class ButlerCarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Car
-        fields = ['id', 'sub_model', 'trim', 'color', 'vin_number', 'license_plate', 'description', 'images', 'inspection_report', 'retail_price', 'release_date', 'mileage', 'is_new', 'is_hot',
+        fields = ['id', 'sub_model', 'trim', 'color', 'license_plate', 'description', 'images', 'retail_price', 'release_date', 'mileage', 'is_new', 'is_hot',
         'is_butler', 'butler_price', 'butler_reservated_dates', 'butler_available_from'
         ]
 

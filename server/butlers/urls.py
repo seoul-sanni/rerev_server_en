@@ -3,6 +3,7 @@ app_name = 'butlers'
 
 from django.urls import path
 
+from .views import GarageAPIView
 from .views import ModelListAPIView, ModelDetailAPIView
 from .views import CarListAPIView, CarDetailAPIView
 from .views import ButlerAPIView, ButlerRequestListAPIView, ButlerRequestAPIView
@@ -13,7 +14,9 @@ from .views import CouponListAPIView, CouponDetailAPIView
 urlpatterns = [
     path('', ButlerAPIView.as_view(), name='butler'),
     path('/requests', ButlerRequestListAPIView.as_view(), name='butler-request'),
-    
+
+    path('/garages', GarageAPIView.as_view(), name='garage-list'),
+
     path('/models/request', ModelRequestAPIView.as_view(), name='model-request'),                   # 모델 요청
     path('/models', ModelListAPIView.as_view(), name='model-list'),                                 # 모델 목록
     path('/models/<int:model_id>', ModelDetailAPIView.as_view(), name='model-detail'),              # 모델 상세
