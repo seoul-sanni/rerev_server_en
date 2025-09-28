@@ -125,11 +125,13 @@ class ButlerRequestSerializer(serializers.ModelSerializer):
     point_amount = serializers.IntegerField(write_only=True, required=False, allow_null=True)
     point_used = serializers.SerializerMethodField(read_only=True)
     payment_id = serializers.CharField(write_only=True, required=False, allow_null=True)
+    way_point_requests = ButlerRequestWayPointSerializer(write_only=True, required=False, allow_null=True, many=True)
+    way_points = ButlerRequestWayPointSerializer(source='butler_way_points', read_only=True, many=True)
     
     class Meta:
         model = ButlerRequest
-        fields = ['id', 'user', 'car', 'start_at', 'end_at', 'point_used', 'created_at', 'modified_at', 'coupon_id', 'coupon', 'is_active', 'point_amount', 'payment_id']
-        read_only_fields = ['id', 'user', 'car', 'point_used', 'end_at', 'created_at', 'modified_at', 'coupon', 'is_active']
+        fields = ['id', 'user', 'car', 'start_at', 'end_at', 'point_used', 'created_at', 'modified_at', 'coupon_id', 'coupon', 'is_active', 'point_amount', 'payment_id', 'way_point_requests', 'way_points']
+        read_only_fields = ['id', 'user', 'car', 'point_used', 'end_at', 'created_at', 'modified_at', 'coupon', 'is_active', 'way_points']
     
     def get_point_used(self, obj):
         if obj.point:
@@ -155,7 +157,12 @@ class ButlerRequestSerializer(serializers.ModelSerializer):
             except ButlerUserCoupon.DoesNotExist:
                 raise serializers.ValidationError("Invalid or expired coupon")
         
-        butler_request = ButlerRequest.objects.create(**validated_data, coupon=user_coupon)        
+        way_point_requests = validated_data.pop('way_point_requests', [])        
+        butler_request = ButlerRequest.objects.create(**validated_data, coupon=user_coupon)
+
+        for way_point_request in way_point_requests:
+            ButlerWayPoint.objects.create(butler_request=butler_request, address=way_point_request['address'], scheduled_time=way_point_request['scheduled_time'])
+        
         return butler_request
 
 
