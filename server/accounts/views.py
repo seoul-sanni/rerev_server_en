@@ -23,6 +23,8 @@ from drf_spectacular.utils import extend_schema
 
 from users.rules import RefferalRule
 from server.utils import SuccessResponseBuilder, ErrorResponseBuilder
+from butlers.models import Butler, ButlerRequest
+from subscriptions.models import Subscription, SubscriptionRequest
 
 from .task import send_verification_email, send_verification_sms
 from .utils import AuthResponseBuilder, NaverResponse, KakaoResponse, GoogleResponse, PortOneResponse
@@ -204,10 +206,22 @@ class AccountAPIView(APIView):
     @extend_schema(**AccountSchema.delete_account())
     def delete(self, request):
         user = request.user  # Authenticated user
-        user.delete()
-
-        response = SuccessResponseBuilder().with_message("계정 삭제 성공").build()
-        return Response(response, status=status.HTTP_202_ACCEPTED)
+        if Subscription.objects.filter(request__user=user, is_active=True).exists():
+            response = ErrorResponseBuilder().with_message("구독 중인 계정은 삭제할 수 없습니다. 본사에 문의해주세요.").build()
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        elif SubscriptionRequest.objects.filter(user=user, is_active=True).exists():
+            response = ErrorResponseBuilder().with_message("구독 요청 중인 계정은 삭제할 수 없습니다. 본사에 문의해주세요.").build()
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        elif Butler.objects.filter(request__user=user, is_active=True).exists():
+            response = ErrorResponseBuilder().with_message("버틀러 중인 계정은 삭제할 수 없습니다. 본사에 문의해주세요.").build()
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        elif ButlerRequest.objects.filter(user=user, is_active=True).exists():
+            response = ErrorResponseBuilder().with_message("버틀러 요청 중인 계정은 삭제할 수 없습니다. 본사에 문의해주세요.").build()
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            user.delete()
+            response = SuccessResponseBuilder().with_message("계정 삭제 성공").build()
+            return Response(response, status=status.HTTP_202_ACCEPTED)
         
     # Update Account Info API
     @extend_schema(**AccountSchema.update_account())

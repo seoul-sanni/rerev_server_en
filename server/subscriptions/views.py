@@ -21,7 +21,7 @@ from .serializers import SimpleSubscriptionModelSerializer, SubscriptionModelLis
 from .serializers import SubscriptionSerializer, SubscriptionRequestSerializer
 from .serializers import SubscriptionReviewSerializer, SubscriptionReviewDetailSerializer, SubscriptionModelRequestSerializer
 from .serializers import SubscriptionCouponSerializer, SubscriptionUserCouponSerializer
-from .permissions import AllowAny, IsAuthenticated, IsCIVerified, IsAuthor, IsSubscripted
+from .permissions import AllowAny, IsAuthenticated, IsAuthor, IsSubscripted
 from .paginations import SubscriptionPagination
 from .schemas import GarageSchema, CouponSchema, SubscriptionSchema, ReviewSchema
 
@@ -344,6 +344,58 @@ class SubscriptionRequestListAPIView(APIView):
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+class SubscriptionRequestDetailAPIView(APIView):
+    permission_classes = [IsAuthor]
+
+    @extend_schema(**SubscriptionSchema.get_subscription_request_detail())
+    def get(self, request, request_id):
+        try:
+            subscription_request = SubscriptionRequest.objects.get(id=request_id)
+            self.check_object_permissions(request, subscription_request)
+            serializer = SubscriptionRequestSerializer(subscription_request)
+            response = SuccessResponseBuilder().with_message("구독 요청 상세 정보 조회 성공").with_data({'subscription_request': serializer.data}).build()
+            return Response(response, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            response = ErrorResponseBuilder().with_message("구독 요청 상세 정보를 불러오는 중 오류가 발생했습니다.").with_errors(str(e)).build()
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @extend_schema(**SubscriptionSchema.update_subscription_request())
+    def put(self, request, request_id):
+        try:
+            subscription_request = SubscriptionRequest.objects.get(id=request_id)
+            self.check_object_permissions(request, subscription_request)
+            serializer = SubscriptionRequestSerializer(subscription_request, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                response = SuccessResponseBuilder().with_message("구독 요청 상세 정보를 수정 성공").with_data({'subscription_request': serializer.data}).build()
+                return Response(response, status=status.HTTP_200_OK)
+            else:
+                response = ErrorResponseBuilder().with_message("입력 정보가 올바르지 않습니다.").with_errors(serializer.errors).build()
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            response = ErrorResponseBuilder().with_message("구독 요청 상세 정보를 수정하는 중 오류가 발생했습니다.").with_errors(str(e)).build()
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @extend_schema(**SubscriptionSchema.delete_subscription_request())
+    def delete(self, request, request_id):
+        try:
+            subscription_request = SubscriptionRequest.objects.get(id=request_id)
+            self.check_object_permissions(request, subscription_request)
+            if subscription_request.is_active == False:
+                response = ErrorResponseBuilder().with_message("이미 진행중인 구독입니다. 본사에 문의해주세요.").build()
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                subscription_request.delete()
+                response = SuccessResponseBuilder().with_message("구독 요청 삭제 성공").build()
+                return Response(response, status=status.HTTP_204_NO_CONTENT)
+
+        except Exception as e:
+            response = ErrorResponseBuilder().with_message("구독 요청 삭제하는 중 오류가 발생했습니다.").with_errors(str(e)).build()
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 # 구독 요청 API
 class SubscriptionRequestAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -624,7 +676,7 @@ class ReviewLikeAPIView(APIView):
 # <-------------------------------------------------------------------------------------------------------------------------------->
 # Model Request 추가 API
 class ModelRequestAPIView(APIView):
-    permission_classes = [IsCIVerified]
+    permission_classes = [IsAuthenticated]
 
     @extend_schema(**GarageSchema.create_model_request())
     def post(self, request):

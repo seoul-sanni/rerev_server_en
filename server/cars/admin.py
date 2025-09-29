@@ -67,7 +67,7 @@ class CarAdmin(admin.ModelAdmin):
             )
         }),
         ('Butler Information', {
-            'fields': ('is_butler', 'butler_price', 'butler_reservated_dates', 'butler_available_from')
+            'fields': ('is_butler', 'butler_fee', 'butler_overtime_fee', 'butler_reservated_dates', 'butler_available_from')
         }),
         ('System Information', {
             'fields': ('is_new', 'is_hot', 'is_active', 'created_at', 'modified_at'),

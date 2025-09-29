@@ -1,9 +1,9 @@
 # butlers/serializers.py
 app_name = 'butlers'
 
-from rest_framework import serializers
+from datetime import timedelta
 
-from django.utils import timezone
+from rest_framework import serializers
 
 from cars.models import Brand, Model, Car
 from users.models import PointTransaction
@@ -46,7 +46,7 @@ class SimpleButlerCarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Car
         fields = ['id', 'model', 'sub_model', 'trim', 'color', 'license_plate', 'description', 'images', 'retail_price', 'release_date', 'mileage', 'is_new', 'is_hot',
-        'is_butler', 'butler_price', 'butler_reservated_dates', 'butler_available_from'
+        'is_butler', 'butler_fee', 'butler_overtime_fee', 'butler_reservated_dates', 'butler_available_from'
         ]
 
 
@@ -54,7 +54,7 @@ class ButlerCarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Car
         fields = ['id', 'sub_model', 'trim', 'color', 'license_plate', 'description', 'images', 'retail_price', 'release_date', 'mileage', 'is_new', 'is_hot',
-        'is_butler', 'butler_price', 'butler_reservated_dates', 'butler_available_from'
+        'is_butler', 'butler_fee', 'butler_overtime_fee', 'butler_reservated_dates', 'butler_available_from'
         ]
 
 
@@ -130,8 +130,8 @@ class ButlerRequestSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ButlerRequest
-        fields = ['id', 'user', 'car', 'start_at', 'start_location', 'end_at', 'end_location', 'point_used', 'created_at', 'modified_at', 'coupon_id', 'coupon', 'is_active', 'point_amount', 'payment_id', 'way_point_requests', 'way_points']
-        read_only_fields = ['id', 'user', 'car', 'point_used', 'end_at', 'created_at', 'modified_at', 'coupon', 'is_active', 'way_points']
+        fields = ['id', 'user', 'car', 'start_at', 'start_location', 'end_at', 'end_location', 'description', 'point_used', 'created_at', 'modified_at', 'coupon_id', 'coupon', 'is_active', 'point_amount', 'payment_id', 'way_point_requests', 'way_points']
+        read_only_fields = ['id', 'user', 'car', 'point_used', 'created_at', 'modified_at', 'coupon', 'is_active', 'way_points']
     
     def get_point_used(self, obj):
         if obj.point:
@@ -164,6 +164,20 @@ class ButlerRequestSerializer(serializers.ModelSerializer):
             ButlerWayPoint.objects.create(butler_request=butler_request, address=way_point_request['address'], scheduled_time=way_point_request['scheduled_time'])
         
         return butler_request
+
+    def update(self, instance, validated_data):
+        validated_data.pop('point_amount', None)
+        validated_data.pop('coupon_id', None)
+        validated_data.pop('way_point_requests', None)
+        
+        if 'start_at' in validated_data and 'end_at' not in validated_data:
+            validated_data['end_at'] = validated_data['start_at'] + timedelta(hours=10)
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+        return instance
 
 
 class ButlerSerializer(serializers.ModelSerializer):

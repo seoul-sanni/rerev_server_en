@@ -801,6 +801,274 @@ class ButlerSchema:
         }
     
     @staticmethod
+    def get_butler_request_detail():
+        return {
+            'summary': "버틀러 요청 상세 정보 조회",
+            'description': "특정 버틀러 요청의 상세 정보를 조회합니다. 작성자만 조회 가능합니다.",
+            'operation_id': 'butlers_butler_request_detail',
+            'responses': {
+                200: SuccessResponseSerializer,
+                401: ErrorResponseSerializer,
+                403: ErrorResponseSerializer,
+                404: ErrorResponseSerializer,
+                500: ErrorResponseSerializer,
+            },
+            'examples': [
+                CommonExamples.success_example(
+                    message="버틀러 요청 상세 정보 조회 성공",
+                    data={
+                        "butler_request": {
+                            "id": 1,
+                            "user": 1,
+                            "car": {
+                                "id": 1,
+                                "model": {
+                                    "id": 1,
+                                    "name": "Model 3",
+                                    "brand": {
+                                        "id": 1,
+                                        "name": "Tesla",
+                                        "slug": "tesla",
+                                        "image": "https://example.com/tesla.jpg"
+                                    },
+                                    "code": "TESLA_MODEL3",
+                                    "image": "https://example.com/model3.jpg",
+                                    "front_image": "https://example.com/model3_front.jpg",
+                                    "rear_image": "https://example.com/model3_rear.jpg",
+                                    "slug": "tesla-model3-tesla_model3"
+                                },
+                                "sub_model": "Standard",
+                                "trim": "Long Range",
+                                "color": "White",
+                                "license_plate": "12가3456",
+                                "description": "Tesla Model 3 Long Range",
+                                "images": ["https://example.com/car1.jpg", "https://example.com/car2.jpg"],
+                                "retail_price": 50000000,
+                                "release_date": "2024-01-01",
+                                "mileage": 1000,
+                                "is_new": True,
+                                "is_hot": False,
+                                "is_butler": True,
+                                "butler_fee": 500000,
+                                "butler_overtime_fee": 10000,
+                                "butler_reservated_dates": ["2024-01-15", "2024-01-20"],
+                                "butler_available_from": "2024-01-01"
+                            },
+                            "start_at": "2024-01-01T09:00:00Z",
+                            "start_location": "서울시 강남구 테헤란로 123",
+                            "end_at": "2024-01-01T18:00:00Z",
+                            "end_location": "서울시 강남구 테헤란로 456",
+                            "description": "출장용 차량 요청",
+                            "point_used": 50000,
+                            "coupon": {
+                                "id": 1,
+                                "user": 1,
+                                "coupon": {
+                                    "id": 1,
+                                    "code": "WELCOME10",
+                                    "name": "신규 가입 할인",
+                                    "description": "신규 가입자 10% 할인",
+                                    "brand_ids": [1],
+                                    "model_ids": [1],
+                                    "car_ids": [1],
+                                    "discount_type": "PERCENTAGE",
+                                    "discount_rate": 10,
+                                    "max_discount": 100000,
+                                    "discount": 0,
+                                    "min_price": 0,
+                                    "max_price": 1000000,
+                                    "valid_from": "2024-01-01T00:00:00Z",
+                                    "valid_to": "2024-12-31T23:59:59Z",
+                                    "is_specific": False
+                                },
+                                "is_active": True,
+                                "is_used": False,
+                                "is_valid": True,
+                                "created_at": "2024-01-01T00:00:00Z",
+                                "used_at": None
+                            },
+                            "way_points": [
+                                {
+                                    "id": 1,
+                                    "address": "서울시 서초구 서초대로 123",
+                                    "scheduled_time": "2024-01-01T12:00:00Z"
+                                },
+                                {
+                                    "id": 2,
+                                    "address": "서울시 송파구 올림픽로 456",
+                                    "scheduled_time": "2024-01-01T15:00:00Z"
+                                }
+                            ],
+                            "created_at": "2024-01-01T00:00:00Z",
+                            "modified_at": "2024-01-01T00:00:00Z",
+                            "is_active": True
+                        }
+                    }
+                ),
+                CommonExamples.error_example(
+                    message="요청하신 버틀러 요청을 찾을 수 없습니다.",
+                    errors={"detail": "Butler request not found"}
+                ),
+                CommonExamples.error_example(
+                    message="권한이 없습니다.",
+                    errors={"detail": "You do not have permission to perform this action."}
+                )
+            ]
+        }
+    
+    @staticmethod
+    def update_butler_request():
+        return {
+            'summary': "버틀러 요청 수정",
+            'description': "버틀러 요청 정보를 수정합니다. 작성자만 수정 가능합니다.",
+            'request': ButlerRequestCreateSerializer,
+            'responses': {
+                200: SuccessResponseSerializer,
+                400: ErrorResponseSerializer,
+                401: ErrorResponseSerializer,
+                403: ErrorResponseSerializer,
+                404: ErrorResponseSerializer,
+                500: ErrorResponseSerializer,
+            },
+            'examples': [
+                CommonExamples.success_example(
+                    message="버틀러 요청 상세 정보를 수정 성공",
+                    data={
+                        "butler_request": {
+                            "id": 1,
+                            "user": 1,
+                            "car": {
+                                "id": 1,
+                                "model": {
+                                    "id": 1,
+                                    "name": "Model 3",
+                                    "brand": {
+                                        "id": 1,
+                                        "name": "Tesla",
+                                        "slug": "tesla",
+                                        "image": "https://example.com/tesla.jpg"
+                                    },
+                                    "code": "TESLA_MODEL3",
+                                    "image": "https://example.com/model3.jpg",
+                                    "front_image": "https://example.com/model3_front.jpg",
+                                    "rear_image": "https://example.com/model3_rear.jpg",
+                                    "slug": "tesla-model3-tesla_model3"
+                                },
+                                "sub_model": "Standard",
+                                "trim": "Long Range",
+                                "color": "White",
+                                "license_plate": "12가3456",
+                                "description": "Tesla Model 3 Long Range",
+                                "images": ["https://example.com/car1.jpg", "https://example.com/car2.jpg"],
+                                "retail_price": 50000000,
+                                "release_date": "2024-01-01",
+                                "mileage": 1000,
+                                "is_new": True,
+                                "is_hot": False,
+                                "is_butler": True,
+                                "butler_fee": 500000,
+                                "butler_overtime_fee": 10000,
+                                "butler_reservated_dates": ["2024-01-15", "2024-01-20"],
+                                "butler_available_from": "2024-01-01"
+                            },
+                            "start_at": "2024-01-01T10:00:00Z",
+                            "start_location": "서울시 강남구 테헤란로 789",
+                            "end_at": "2024-01-01T19:00:00Z",
+                            "end_location": "서울시 강남구 테헤란로 101",
+                            "description": "수정된 출장용 차량 요청",
+                            "point_used": 50000,
+                            "coupon": {
+                                "id": 1,
+                                "user": 1,
+                                "coupon": {
+                                    "id": 1,
+                                    "code": "WELCOME10",
+                                    "name": "신규 가입 할인",
+                                    "description": "신규 가입자 10% 할인",
+                                    "brand_ids": [1],
+                                    "model_ids": [1],
+                                    "car_ids": [1],
+                                    "discount_type": "PERCENTAGE",
+                                    "discount_rate": 10,
+                                    "max_discount": 100000,
+                                    "discount": 0,
+                                    "min_price": 0,
+                                    "max_price": 1000000,
+                                    "valid_from": "2024-01-01T00:00:00Z",
+                                    "valid_to": "2024-12-31T23:59:59Z",
+                                    "is_specific": False
+                                },
+                                "is_active": True,
+                                "is_used": False,
+                                "is_valid": True,
+                                "created_at": "2024-01-01T00:00:00Z",
+                                "used_at": None
+                            },
+                            "way_points": [
+                                {
+                                    "id": 1,
+                                    "address": "서울시 서초구 서초대로 789",
+                                    "scheduled_time": "2024-01-01T13:00:00Z"
+                                }
+                            ],
+                            "created_at": "2024-01-01T00:00:00Z",
+                            "modified_at": "2024-01-02T00:00:00Z",
+                            "is_active": True
+                        }
+                    }
+                ),
+                CommonExamples.error_example(
+                    message="입력 정보가 올바르지 않습니다.",
+                    errors={
+                        "start_at": ["This field is required."],
+                        "start_location": ["This field is required."]
+                    }
+                ),
+                CommonExamples.error_example(
+                    message="요청하신 버틀러 요청을 찾을 수 없습니다.",
+                    errors={"detail": "Butler request not found"}
+                ),
+                CommonExamples.error_example(
+                    message="권한이 없습니다.",
+                    errors={"detail": "You do not have permission to perform this action."}
+                )
+            ]
+        }
+    
+    @staticmethod
+    def delete_butler_request():
+        return {
+            'summary': "버틀러 요청 삭제",
+            'description': "버틀러 요청을 삭제합니다. 작성자만 삭제 가능하며, 이미 배정된 버틀러가 있는 경우 삭제할 수 없습니다.",
+            'responses': {
+                204: SuccessResponseSerializer,
+                400: ErrorResponseSerializer,
+                401: ErrorResponseSerializer,
+                403: ErrorResponseSerializer,
+                404: ErrorResponseSerializer,
+                500: ErrorResponseSerializer,
+            },
+            'examples': [
+                CommonExamples.success_example(
+                    message="버틀러 요청 삭제 성공",
+                    data={}
+                ),
+                CommonExamples.error_example(
+                    message="이미 배정된 버틀러가 있습니다. 본사에 문의해주세요.",
+                    errors={"detail": "Cannot delete request with assigned butler"}
+                ),
+                CommonExamples.error_example(
+                    message="요청하신 버틀러 요청을 찾을 수 없습니다.",
+                    errors={"detail": "Butler request not found"}
+                ),
+                CommonExamples.error_example(
+                    message="권한이 없습니다.",
+                    errors={"detail": "You do not have permission to perform this action."}
+                )
+            ]
+        }
+    
+    @staticmethod
     def get_butler_list():
         return {
             'summary': "구독 목록 조회",

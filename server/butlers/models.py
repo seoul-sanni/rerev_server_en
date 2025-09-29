@@ -220,6 +220,7 @@ class ButlerRequest(models.Model):
     start_location = models.CharField(max_length=255, verbose_name="Start Location")
     end_at = models.DateTimeField(verbose_name="End At", null=True, blank=True)
     end_location = models.CharField(max_length=255, verbose_name="End Location")
+    description = models.TextField(verbose_name="Description", null=True, blank=True)
 
     coupon = models.ForeignKey(ButlerUserCoupon, on_delete=models.CASCADE, related_name='butler_requests', null=True, blank=True)
     point = models.ForeignKey('users.PointTransaction', on_delete=models.CASCADE, related_name='butler_requests', null=True, blank=True)

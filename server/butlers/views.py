@@ -268,6 +268,58 @@ class ButlerRequestListAPIView(APIView):
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+class ButlerRequestDetailAPIView(APIView):
+    permission_classes = [IsAuthor]
+
+    @extend_schema(**ButlerSchema.get_butler_request_detail())
+    def get(self, request, request_id):
+        try:
+            butler_request = ButlerRequest.objects.get(id=request_id)
+            self.check_object_permissions(request, butler_request)
+            serializer = ButlerRequestSerializer(butler_request)
+            response = SuccessResponseBuilder().with_message("버틀러 요청 상세 정보 조회 성공").with_data({'butler_request': serializer.data}).build()
+            return Response(response, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            response = ErrorResponseBuilder().with_message("버틀러 요청 상세 정보를 불러오는 중 오류가 발생했습니다.").with_errors(str(e)).build()
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @extend_schema(**ButlerSchema.update_butler_request())
+    def put(self, request, request_id):
+        try:
+            butler_request = ButlerRequest.objects.get(id=request_id)
+            self.check_object_permissions(request, butler_request)
+            serializer = ButlerRequestSerializer(butler_request, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                response = SuccessResponseBuilder().with_message("버틀러 요청 상세 정보를 수정 성공").with_data({'butler_request': serializer.data}).build()
+                return Response(response, status=status.HTTP_200_OK)
+            else:
+                response = ErrorResponseBuilder().with_message("입력 정보가 올바르지 않습니다.").with_errors(serializer.errors).build()
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            response = ErrorResponseBuilder().with_message("버틀러 요청 상세 정보를 수정하는 중 오류가 발생했습니다.").with_errors(str(e)).build()
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @extend_schema(**ButlerSchema.delete_butler_request())
+    def delete(self, request, request_id):
+        try:
+            butler_request = ButlerRequest.objects.get(id=request_id)
+            self.check_object_permissions(request, butler_request)
+            if butler_request.is_active == False:
+                response = ErrorResponseBuilder().with_message("이미 배정된 버틀러가 있습니다. 본사에 문의해주세요.").build()
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                butler_request.delete()
+                response = SuccessResponseBuilder().with_message("버틀러 요청 삭제 성공").build()
+                return Response(response, status=status.HTTP_204_NO_CONTENT)
+
+        except Exception as e:
+            response = ErrorResponseBuilder().with_message("버틀러 요청 삭제하는 중 오류가 발생했습니다.").with_errors(str(e)).build()
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 # Butler 요청 API
 class ButlerRequestAPIView(APIView):
     permission_classes = [IsCIVerified]

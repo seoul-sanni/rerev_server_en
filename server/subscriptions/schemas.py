@@ -851,6 +851,287 @@ class SubscriptionSchema:
         }
     
     @staticmethod
+    def get_subscription_request_detail():
+        return {
+            'summary': "구독 요청 상세 정보 조회",
+            'description': "특정 구독 요청의 상세 정보를 조회합니다. 작성자만 조회 가능합니다.",
+            'operation_id': 'subscriptions_subscription_request_detail',
+            'responses': {
+                200: SuccessResponseSerializer,
+                401: ErrorResponseSerializer,
+                403: ErrorResponseSerializer,
+                404: ErrorResponseSerializer,
+                500: ErrorResponseSerializer,
+            },
+            'examples': [
+                CommonExamples.success_example(
+                    message="구독 요청 상세 정보 조회 성공",
+                    data={
+                        "subscription_request": {
+                            "id": 1,
+                            "user": 1,
+                            "car": {
+                                "id": 1,
+                                "model": {
+                                    "id": 1,
+                                    "name": "Model 3",
+                                    "brand": {
+                                        "id": 1,
+                                        "name": "Tesla",
+                                        "slug": "tesla",
+                                        "image": "https://example.com/tesla.jpg"
+                                    },
+                                    "code": "TESLA_MODEL3",
+                                    "image": "https://example.com/model3.jpg",
+                                    "front_image": "https://example.com/model3_front.jpg",
+                                    "rear_image": "https://example.com/model3_rear.jpg",
+                                    "slug": "tesla-model3-tesla_model3"
+                                },
+                                "sub_model": "Standard",
+                                "trim": "Long Range",
+                                "color": "White",
+                                "vin_number": "5YJ3E1EA4KF123456",
+                                "license_plate": "12가3456",
+                                "description": "Tesla Model 3 Long Range",
+                                "images": ["https://example.com/car1.jpg", "https://example.com/car2.jpg"],
+                                "inspection_report": "https://example.com/report.pdf",
+                                "retail_price": 50000000,
+                                "release_date": "2024-01-01",
+                                "mileage": 1000,
+                                "is_new": True,
+                                "is_hot": False,
+                                "is_sellable": True,
+                                "sell_price": 45000000,
+                                "is_subscriptable": True,
+                                "subscription_fee_1": 500000,
+                                "subscription_fee_3": 450000,
+                                "subscription_fee_6": 400000,
+                                "subscription_fee_12": 350000,
+                                "subscription_fee_24": 300000,
+                                "subscription_fee_36": 280000,
+                                "subscription_fee_48": 260000,
+                                "subscription_fee_60": 240000,
+                                "subscription_fee_72": 220000,
+                                "subscription_fee_84": 200000,
+                                "subscription_fee_96": 180000,
+                                "subscription_fee_minimum": 500000,
+                                "subscription_available_from": "2024-01-01"
+                            },
+                            "month": 12,
+                            "start_date": "2024-01-01",
+                            "end_date": "2024-12-31",
+                            "point_used": 50000,
+                            "coupon": {
+                                "id": 1,
+                                "user": 1,
+                                "coupon": {
+                                    "id": 1,
+                                    "code": "WELCOME10",
+                                    "name": "신규 가입 할인",
+                                    "description": "신규 가입자 10% 할인",
+                                    "brand_ids": [1],
+                                    "model_ids": [1],
+                                    "car_ids": [1],
+                                    "discount_type": "PERCENTAGE",
+                                    "discount_rate": 10,
+                                    "max_discount": 100000,
+                                    "discount": 0,
+                                    "min_price": 0,
+                                    "max_price": 1000000,
+                                    "min_month": 1,
+                                    "max_month": 12,
+                                    "valid_from": "2024-01-01T00:00:00Z",
+                                    "valid_to": "2024-12-31T23:59:59Z",
+                                    "is_specific": False
+                                },
+                                "is_active": True,
+                                "is_used": False,
+                                "is_valid": True,
+                                "created_at": "2024-01-01T00:00:00Z",
+                                "used_at": None
+                            },
+                            "customer_key": "customer_key_123",
+                            "auth_key": "auth_key_123",
+                            "billing_key": "billing_key_123",
+                            "created_at": "2024-01-01T00:00:00Z",
+                            "modified_at": "2024-01-01T00:00:00Z",
+                            "is_active": True
+                        }
+                    }
+                ),
+                CommonExamples.error_example(
+                    message="요청하신 구독 요청을 찾을 수 없습니다.",
+                    errors={"detail": "Subscription request not found"}
+                ),
+                CommonExamples.error_example(
+                    message="권한이 없습니다.",
+                    errors={"detail": "You do not have permission to perform this action."}
+                )
+            ]
+        }
+    
+    @staticmethod
+    def update_subscription_request():
+        return {
+            'summary': "구독 요청 수정",
+            'description': "구독 요청 정보를 수정합니다. 작성자만 수정 가능합니다.",
+            'request': SubscriptionRequestCreateSerializer,
+            'responses': {
+                200: SuccessResponseSerializer,
+                400: ErrorResponseSerializer,
+                401: ErrorResponseSerializer,
+                403: ErrorResponseSerializer,
+                404: ErrorResponseSerializer,
+                500: ErrorResponseSerializer,
+            },
+            'examples': [
+                CommonExamples.success_example(
+                    message="구독 요청 상세 정보를 수정 성공",
+                    data={
+                        "subscription_request": {
+                            "id": 1,
+                            "user": 1,
+                            "car": {
+                                "id": 1,
+                                "model": {
+                                    "id": 1,
+                                    "name": "Model 3",
+                                    "brand": {
+                                        "id": 1,
+                                        "name": "Tesla",
+                                        "slug": "tesla",
+                                        "image": "https://example.com/tesla.jpg"
+                                    },
+                                    "code": "TESLA_MODEL3",
+                                    "image": "https://example.com/model3.jpg",
+                                    "front_image": "https://example.com/model3_front.jpg",
+                                    "rear_image": "https://example.com/model3_rear.jpg",
+                                    "slug": "tesla-model3-tesla_model3"
+                                },
+                                "sub_model": "Standard",
+                                "trim": "Long Range",
+                                "color": "White",
+                                "vin_number": "5YJ3E1EA4KF123456",
+                                "license_plate": "12가3456",
+                                "description": "Tesla Model 3 Long Range",
+                                "images": ["https://example.com/car1.jpg", "https://example.com/car2.jpg"],
+                                "inspection_report": "https://example.com/report.pdf",
+                                "retail_price": 50000000,
+                                "release_date": "2024-01-01",
+                                "mileage": 1000,
+                                "is_new": True,
+                                "is_hot": False,
+                                "is_sellable": True,
+                                "sell_price": 45000000,
+                                "is_subscriptable": True,
+                                "subscription_fee_1": 500000,
+                                "subscription_fee_3": 450000,
+                                "subscription_fee_6": 400000,
+                                "subscription_fee_12": 350000,
+                                "subscription_fee_24": 300000,
+                                "subscription_fee_36": 280000,
+                                "subscription_fee_48": 260000,
+                                "subscription_fee_60": 240000,
+                                "subscription_fee_72": 220000,
+                                "subscription_fee_84": 200000,
+                                "subscription_fee_96": 180000,
+                                "subscription_fee_minimum": 500000,
+                                "subscription_available_from": "2024-01-01"
+                            },
+                            "month": 24,
+                            "start_date": "2024-02-01",
+                            "end_date": "2026-01-31",
+                            "point_used": 50000,
+                            "coupon": {
+                                "id": 1,
+                                "user": 1,
+                                "coupon": {
+                                    "id": 1,
+                                    "code": "WELCOME10",
+                                    "name": "신규 가입 할인",
+                                    "description": "신규 가입자 10% 할인",
+                                    "brand_ids": [1],
+                                    "model_ids": [1],
+                                    "car_ids": [1],
+                                    "discount_type": "PERCENTAGE",
+                                    "discount_rate": 10,
+                                    "max_discount": 100000,
+                                    "discount": 0,
+                                    "min_price": 0,
+                                    "max_price": 1000000,
+                                    "min_month": 1,
+                                    "max_month": 12,
+                                    "valid_from": "2024-01-01T00:00:00Z",
+                                    "valid_to": "2024-12-31T23:59:59Z",
+                                    "is_specific": False
+                                },
+                                "is_active": True,
+                                "is_used": False,
+                                "is_valid": True,
+                                "created_at": "2024-01-01T00:00:00Z",
+                                "used_at": None
+                            },
+                            "customer_key": "customer_key_123",
+                            "auth_key": "auth_key_123",
+                            "billing_key": "billing_key_123",
+                            "created_at": "2024-01-01T00:00:00Z",
+                            "modified_at": "2024-01-02T00:00:00Z",
+                            "is_active": True
+                        }
+                    }
+                ),
+                CommonExamples.error_example(
+                    message="입력 정보가 올바르지 않습니다.",
+                    errors={
+                        "month": ["This field is required."],
+                        "start_date": ["This field is required."]
+                    }
+                ),
+                CommonExamples.error_example(
+                    message="요청하신 구독 요청을 찾을 수 없습니다.",
+                    errors={"detail": "Subscription request not found"}
+                ),
+                CommonExamples.error_example(
+                    message="권한이 없습니다.",
+                    errors={"detail": "You do not have permission to perform this action."}
+                )
+            ]
+        }
+    
+    @staticmethod
+    def delete_subscription_request():
+        return {
+            'summary': "구독 요청 삭제",
+            'description': "구독 요청을 삭제합니다. 작성자만 삭제 가능하며, 이미 진행중인 구독이 있는 경우 삭제할 수 없습니다.",
+            'responses': {
+                204: SuccessResponseSerializer,
+                400: ErrorResponseSerializer,
+                401: ErrorResponseSerializer,
+                403: ErrorResponseSerializer,
+                404: ErrorResponseSerializer,
+                500: ErrorResponseSerializer,
+            },
+            'examples': [
+                CommonExamples.success_example(
+                    message="구독 요청 삭제 성공",
+                    data={}
+                ),
+                CommonExamples.error_example(
+                    message="이미 진행중인 구독입니다. 본사에 문의해주세요.",
+                    errors={"detail": "Cannot delete request with active subscription"}
+                ),
+                CommonExamples.error_example(
+                    message="요청하신 구독 요청을 찾을 수 없습니다.",
+                    errors={"detail": "Subscription request not found"}
+                ),
+                CommonExamples.error_example(
+                    message="권한이 없습니다.",
+                    errors={"detail": "You do not have permission to perform this action."}
+                )
+            ]
+        }
+    
+    @staticmethod
     def get_subscription_list():
         return {
             'summary': "구독 목록 조회",

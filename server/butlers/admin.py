@@ -16,7 +16,7 @@ class ButlerRequestAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Basic Information', {
-            'fields': ('user', 'car', 'start_at', 'start_location', 'end_at', 'end_location')
+            'fields': ('user', 'car', 'start_at', 'start_location', 'end_at', 'end_location', 'description')
         }),
         ('Coupon Information', {
             'fields': ('coupon',)

@@ -167,6 +167,16 @@ class SubscriptionRequestSerializer(serializers.ModelSerializer):
         subscription_request = SubscriptionRequest.objects.create(**validated_data, coupon=user_coupon)        
         return subscription_request
 
+    def update(self, instance, validated_data):
+        validated_data.pop('point_amount', None)
+        validated_data.pop('coupon_id', None)
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+        return instance
+
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     request = SubscriptionRequestSerializer(read_only=True)

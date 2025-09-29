@@ -101,7 +101,8 @@ class Car(models.Model):
     subscription_available_from = models.DateField(blank=True, null=True, verbose_name="Subscription Available From")
 
     is_butler = models.BooleanField(default=False, verbose_name="Is Butler")
-    butler_price = models.IntegerField(blank=True, null=True, verbose_name="Butler Price")
+    butler_fee = models.IntegerField(blank=True, null=True, verbose_name="Butler Fee")
+    butler_overtime_fee = models.IntegerField(blank=True, null=True, verbose_name="Butler Overtime Fee")
     butler_reservated_dates = models.JSONField(blank=True, null=True, verbose_name="Butler Reservated Dates")
     butler_available_from = models.DateField(blank=True, null=True, verbose_name="Butler Available From")
 
@@ -123,7 +124,7 @@ class Car(models.Model):
         if self.is_sellable and not self.sell_price:
             raise ValidationError({'sell_price': '판매 가능한 차량은 판매 가격이 필수입니다.'})
 
-        if self.is_butler and not self.butler_price:
+        if self.is_butler and not self.butler_fee:
             raise ValidationError({'butler_price': '버틀러 서비스가 가능한 차량은 버틀러 수수료가 필수입니다.'})
 
         if self.is_subscriptable:

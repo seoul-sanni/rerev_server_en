@@ -6,7 +6,7 @@ from django.urls import path
 from .views import GarageAPIView
 from .views import ModelListAPIView, ModelDetailAPIView
 from .views import CarListAPIView, CarDetailAPIView
-from .views import SubscriptionAPIView, SubscriptionRequestListAPIView, SubscriptionRequestAPIView
+from .views import SubscriptionAPIView, SubscriptionRequestListAPIView, SubscriptionRequestAPIView, SubscriptionRequestDetailAPIView
 from .views import LikeAPIView, ReviewListAPIView, ReviewAPIView, ReviewDetailAPIView, ReviewLikeAPIView
 from .views import ModelRequestAPIView
 from .views import CouponListAPIView, CouponDetailAPIView
@@ -14,6 +14,7 @@ from .views import CouponListAPIView, CouponDetailAPIView
 urlpatterns = [
     path('', SubscriptionAPIView.as_view(), name='subscription'),
     path('/requests', SubscriptionRequestListAPIView.as_view(), name='subscription-request'),
+    path('/requests/<int:request_id>', SubscriptionRequestDetailAPIView.as_view(), name='subscription-request-detail'),
 
     path('/garages', GarageAPIView.as_view(), name='garage-list'),
 
