@@ -130,7 +130,7 @@ class ButlerRequestSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ButlerRequest
-        fields = ['id', 'user', 'car', 'start_at', 'end_at', 'point_used', 'created_at', 'modified_at', 'coupon_id', 'coupon', 'is_active', 'point_amount', 'payment_id', 'way_point_requests', 'way_points']
+        fields = ['id', 'user', 'car', 'start_at', 'start_location', 'end_at', 'end_location', 'point_used', 'created_at', 'modified_at', 'coupon_id', 'coupon', 'is_active', 'point_amount', 'payment_id', 'way_point_requests', 'way_points']
         read_only_fields = ['id', 'user', 'car', 'point_used', 'end_at', 'created_at', 'modified_at', 'coupon', 'is_active', 'way_points']
     
     def get_point_used(self, obj):
