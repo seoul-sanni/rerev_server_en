@@ -141,7 +141,7 @@ class ButlerRequestSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         point_amount = validated_data.pop('point_amount', None)
         if point_amount:
-            point_transaction = PointTransaction.objects.create(user=validated_data.get('user'), amount=-point_amount, transaction_type='BUTTLER')
+            point_transaction = PointTransaction.objects.create(user=validated_data.get('user'), amount=-point_amount, transaction_type='BUTLER')
             validated_data['point'] = point_transaction
 
         coupon_id = validated_data.pop('coupon_id', None)

@@ -41,7 +41,7 @@ def handle_coupon_use(sender, instance, **kwargs):
 @receiver(post_save, sender=ButlerRequest)
 def handle_point_transaction(sender, instance, **kwargs):
     if instance.point:
-        instance.point.transaction_type = 'SUBSCRIPTION'
+        instance.point.transaction_type = 'BUTLER'
         instance.point.transaction_id = instance.id
         instance.point.save()
 

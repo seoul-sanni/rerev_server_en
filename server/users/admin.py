@@ -3,7 +3,7 @@ app_name = 'users'
 
 from django.contrib import admin
 
-from .models import Referral, PointCoupon, PointTransaction
+from .models import Referral, ReferralRule, PointCoupon, PointTransaction
 
 @admin.register(Referral)
 class ReferralAdmin(admin.ModelAdmin):
@@ -11,6 +11,28 @@ class ReferralAdmin(admin.ModelAdmin):
     list_filter = ['is_active', 'created_at', 'modified_at']
     search_fields = ['referrer__username', 'referree__username', 'subscription_coupon__code']
     readonly_fields = ['created_at', 'modified_at']
+
+
+@admin.register(ReferralRule)
+class ReferralRuleAdmin(admin.ModelAdmin):
+    list_display = ['user', 'name', 'description', 'discount_type', 'discount_rate', 'max_discount', 'discount', 'usage_limit', 'usage_limit_per_user', 'valid_from', 'valid_to', 'created_at', 'modified_at', 'is_active']
+    list_filter = ['is_active', 'valid_from', 'valid_to', 'created_at', 'modified_at']
+    search_fields = ['user__username', 'name', 'description']
+    readonly_fields = ['created_at', 'modified_at']
+    list_editable = ['is_active']
+
+    fieldsets = (
+        ('Referral Rule Information', {
+            'fields': ('user', 'name', 'description', 'discount_type', 'discount_rate', 'max_discount', 'discount', 'min_price', 'max_price', 'min_month', 'max_month', 'usage_limit', 'usage_limit_per_user', 'valid_from', 'valid_to')
+        }),
+        ('Status', {
+            'fields': ('is_active',)
+        }),
+        ('System Information', {
+            'fields': ('created_at', 'modified_at'),
+            'classes': ('collapse',)
+        })
+    )
 
 
 @admin.register(PointCoupon)
