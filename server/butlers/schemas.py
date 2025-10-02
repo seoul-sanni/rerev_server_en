@@ -58,6 +58,16 @@ class ButlerRequestCreateSerializer(serializers.Serializer):
     billing_key = serializers.CharField(help_text="결제 키")
 
 
+class ButlerWayPointCreateSerializer(serializers.Serializer):
+    address = serializers.CharField(help_text="경유지 주소")
+    scheduled_time = serializers.DateTimeField(help_text="예정 시간")
+
+
+class ButlerWayPointUpdateSerializer(serializers.Serializer):
+    address = serializers.CharField(required=False, help_text="경유지 주소")
+    scheduled_time = serializers.DateTimeField(required=False, help_text="예정 시간")
+
+
 class CouponAddSerializer(serializers.Serializer):
     coupon_code = serializers.CharField(help_text="쿠폰 코드")
 
@@ -1120,6 +1130,195 @@ class ButlerSchema:
                 CommonExamples.error_example(
                     message="인증이 필요합니다.",
                     errors={"detail": "Authentication credentials were not provided."}
+                )
+            ]
+        }
+    
+    @staticmethod
+    def get_butler_waypoint_list():
+        return {
+            'summary': "버틀러 웨이포인트 목록 조회",
+            'description': "특정 버틀러 요청의 웨이포인트 목록을 조회합니다. 작성자만 조회 가능합니다.",
+            'responses': {
+                200: SuccessResponseSerializer,
+                401: ErrorResponseSerializer,
+                403: ErrorResponseSerializer,
+                404: ErrorResponseSerializer,
+                500: ErrorResponseSerializer,
+            },
+            'examples': [
+                CommonExamples.success_example(
+                    message="버틀러 웨이포인트 목록 조회 성공",
+                    data={
+                        "butler_way_points": [
+                            {
+                                "id": 1,
+                                "address": "서울시 서초구 서초대로 123",
+                                "scheduled_time": "2024-01-01T12:00:00Z"
+                            },
+                            {
+                                "id": 2,
+                                "address": "서울시 송파구 올림픽로 456",
+                                "scheduled_time": "2024-01-01T15:00:00Z"
+                            }
+                        ]
+                    }
+                ),
+                CommonExamples.error_example(
+                    message="요청하신 버틀러 요청을 찾을 수 없습니다.",
+                    errors={"detail": "Butler request not found"}
+                ),
+                CommonExamples.error_example(
+                    message="권한이 없습니다.",
+                    errors={"detail": "You do not have permission to perform this action."}
+                )
+            ]
+        }
+    
+    @staticmethod
+    def create_butler_waypoint():
+        return {
+            'summary': "버틀러 웨이포인트 추가",
+            'description': "버틀러 요청에 웨이포인트를 추가합니다. 작성자만 추가 가능합니다.",
+            'request': ButlerWayPointCreateSerializer,
+            'responses': {
+                201: SuccessResponseSerializer,
+                400: ErrorResponseSerializer,
+                401: ErrorResponseSerializer,
+                403: ErrorResponseSerializer,
+                404: ErrorResponseSerializer,
+                500: ErrorResponseSerializer,
+            },
+            'examples': [
+                CommonExamples.success_example(
+                    message="버틀러 웨이포인트 추가 성공",
+                    data={
+                        "butler_way_point": {
+                            "id": 1,
+                            "address": "서울시 서초구 서초대로 123",
+                            "scheduled_time": "2024-01-01T12:00:00Z"
+                        }
+                    }
+                ),
+                CommonExamples.error_example(
+                    message="입력 정보가 올바르지 않습니다.",
+                    errors={
+                        "address": ["This field is required."],
+                        "scheduled_time": ["This field is required."]
+                    }
+                ),
+                CommonExamples.error_example(
+                    message="요청하신 버틀러 요청을 찾을 수 없습니다.",
+                    errors={"detail": "Butler request not found"}
+                ),
+                CommonExamples.error_example(
+                    message="권한이 없습니다.",
+                    errors={"detail": "You do not have permission to perform this action."}
+                )
+            ]
+        }
+    
+    @staticmethod
+    def get_butler_waypoint_detail():
+        return {
+            'summary': "버틀러 웨이포인트 상세 조회",
+            'description': "특정 버틀러 웨이포인트의 상세 정보를 조회합니다. 작성자만 조회 가능합니다.",
+            'operation_id': 'butlers_butler_waypoint_detail',
+            'responses': {
+                200: SuccessResponseSerializer,
+                401: ErrorResponseSerializer,
+                403: ErrorResponseSerializer,
+                404: ErrorResponseSerializer,
+                500: ErrorResponseSerializer,
+            },
+            'examples': [
+                CommonExamples.success_example(
+                    message="버틀러 웨이포인트 목록 조회 성공",
+                    data={
+                        "butler_way_point": {
+                            "id": 1,
+                            "address": "서울시 서초구 서초대로 123",
+                            "scheduled_time": "2024-01-01T12:00:00Z"
+                        }
+                    }
+                ),
+                CommonExamples.error_example(
+                    message="요청하신 버틀러 웨이포인트를 찾을 수 없습니다.",
+                    errors={"detail": "Butler waypoint not found"}
+                ),
+                CommonExamples.error_example(
+                    message="권한이 없습니다.",
+                    errors={"detail": "You do not have permission to perform this action."}
+                )
+            ]
+        }
+    
+    @staticmethod
+    def update_butler_waypoint():
+        return {
+            'summary': "버틀러 웨이포인트 수정",
+            'description': "버틀러 웨이포인트 정보를 수정합니다. 작성자만 수정 가능합니다.",
+            'request': ButlerWayPointUpdateSerializer,
+            'responses': {
+                200: SuccessResponseSerializer,
+                400: ErrorResponseSerializer,
+                401: ErrorResponseSerializer,
+                403: ErrorResponseSerializer,
+                404: ErrorResponseSerializer,
+                500: ErrorResponseSerializer,
+            },
+            'examples': [
+                CommonExamples.success_example(
+                    message="버틀러 웨이포인트 상세 정보를 수정 성공",
+                    data={
+                        "butler_way_point": {
+                            "id": 1,
+                            "address": "서울시 서초구 서초대로 789",
+                            "scheduled_time": "2024-01-01T13:00:00Z"
+                        }
+                    }
+                ),
+                CommonExamples.error_example(
+                    message="입력 정보가 올바르지 않습니다.",
+                    errors={
+                        "scheduled_time": ["Datetime has wrong format. Use one of these formats instead: YYYY-MM-DDThh:mm[:ss[.uuuuuu]][+HH:MM|-HH:MM|Z]."]
+                    }
+                ),
+                CommonExamples.error_example(
+                    message="요청하신 버틀러 웨이포인트를 찾을 수 없습니다.",
+                    errors={"detail": "Butler waypoint not found"}
+                ),
+                CommonExamples.error_example(
+                    message="권한이 없습니다.",
+                    errors={"detail": "You do not have permission to perform this action."}
+                )
+            ]
+        }
+    
+    @staticmethod
+    def delete_butler_waypoint():
+        return {
+            'summary': "버틀러 웨이포인트 삭제",
+            'description': "버틀러 웨이포인트를 삭제합니다. 작성자만 삭제 가능합니다.",
+            'responses': {
+                204: SuccessResponseSerializer,
+                401: ErrorResponseSerializer,
+                403: ErrorResponseSerializer,
+                404: ErrorResponseSerializer,
+                500: ErrorResponseSerializer,
+            },
+            'examples': [
+                CommonExamples.success_example(
+                    message="버틀러 웨이포인트 삭제 성공",
+                    data={}
+                ),
+                CommonExamples.error_example(
+                    message="요청하신 버틀러 웨이포인트를 찾을 수 없습니다.",
+                    errors={"detail": "Butler waypoint not found"}
+                ),
+                CommonExamples.error_example(
+                    message="권한이 없습니다.",
+                    errors={"detail": "You do not have permission to perform this action."}
                 )
             ]
         }

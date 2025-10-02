@@ -15,12 +15,12 @@ from server.utils import SuccessResponseBuilder, ErrorResponseBuilder
 from cars.models import Brand, Model, Car
 
 from .task import send_butler_email
-from .models import Butler, ButlerRequest, ButlerLike, ButlerReview, ButlerReviewLike, ButlerCoupon, ButlerUserCoupon
+from .models import Butler, ButlerRequest, ButlerWayPoint, ButlerLike, ButlerReview, ButlerReviewLike, ButlerCoupon, ButlerUserCoupon
 from .serializers import ButlerModelListSerializer, ButlerModelDetailSerializer, ButlerCarDetailSerializer, SimpleButlerModelSerializer
-from .serializers import ButlerSerializer, ButlerRequestSerializer
+from .serializers import ButlerSerializer, ButlerRequestSerializer, ButlerWayPointSerializer
 from .serializers import ButlerReviewSerializer, ButlerReviewDetailSerializer, ButlerModelRequestSerializer
 from .serializers import ButlerCouponSerializer, ButlerUserCouponSerializer
-from .permissions import AllowAny, IsAuthenticated, IsCIVerified, IsAuthor, IsButlered
+from .permissions import AllowAny, IsAuthenticated, IsCIVerified, IsAuthor, IsButlered, IsButlerWayPointAuthor
 from .paginations import ButlerPagination
 from .schemas import GarageSchema, CouponSchema, ButlerSchema, ReviewSchema
 
@@ -343,6 +343,88 @@ class ButlerRequestAPIView(APIView):
 
         except Exception as e:
             response = ErrorResponseBuilder().with_message("버틀러 요청을 추가하는 중 오류가 발생했습니다.").with_errors(str(e)).build()
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# Butler 경유지 API
+class ButlerWayPointAPIView(APIView):
+    permission_classes = [IsAuthor]
+
+    @extend_schema(**ButlerSchema.get_butler_waypoint_list())
+    def get(self, request, request_id):
+        try:
+            butler_request = ButlerRequest.objects.get(id=request_id)
+            self.check_object_permissions(request, butler_request)
+            serializer = ButlerWayPointSerializer(butler_request.butler_way_points, many=True)
+            response = SuccessResponseBuilder().with_message("버틀러 웨이포인트 목록 조회 성공").with_data({'butler_way_points': serializer.data}).build()
+            return Response(response, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            response = ErrorResponseBuilder().with_message("버틀러 웨이포인트 목록을 불러오는 중 오류가 발생했습니다.").with_errors(str(e)).build()
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @extend_schema(**ButlerSchema.create_butler_waypoint())
+    def post(self, request, request_id):
+        try:
+            butler_request = ButlerRequest.objects.get(id=request_id)
+            self.check_object_permissions(request, butler_request)
+            serializer = ButlerWayPointSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(butler_request=butler_request)
+                response = SuccessResponseBuilder().with_message("버틀러 웨이포인트 추가 성공").with_data({'butler_way_point': serializer.data}).build()
+                return Response(response, status=status.HTTP_201_CREATED)
+            else:
+                response = ErrorResponseBuilder().with_message("입력 정보가 올바르지 않습니다.").with_errors(serializer.errors).build()
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            response = ErrorResponseBuilder().with_message("버틀러 웨이포인트를 추가하는 중 오류가 발생했습니다.").with_errors(str(e)).build()
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# Butler 경유지 API
+class ButlerWayPointDetailAPIView(APIView):
+    permission_classes = [IsButlerWayPointAuthor]
+
+    @extend_schema(**ButlerSchema.get_butler_waypoint_detail())
+    def get(self, request, waypoint_id):
+        try:
+            butler_way_point = ButlerWayPoint.objects.get(id=waypoint_id)
+            self.check_object_permissions(request, butler_way_point)
+            serializer = ButlerWayPointSerializer(butler_way_point)
+            response = SuccessResponseBuilder().with_message("버틀러 웨이포인트 목록 조회 성공").with_data({'butler_way_point': serializer.data}).build()
+            return Response(response, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            response = ErrorResponseBuilder().with_message("버틀러 웨이포인트 상세 정보를 불러오는 중 오류가 발생했습니다.").with_errors(str(e)).build()
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @extend_schema(**ButlerSchema.update_butler_waypoint())
+    def put(self, request, waypoint_id):
+        try:
+            butler_way_point = ButlerWayPoint.objects.get(id=waypoint_id)
+            self.check_object_permissions(request, butler_way_point)
+            serializer = ButlerWayPointSerializer(butler_way_point, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                response = SuccessResponseBuilder().with_message("버틀러 웨이포인트 상세 정보를 수정 성공").with_data({'butler_way_point': serializer.data}).build()
+                return Response(response, status=status.HTTP_200_OK)
+            else:
+                response = ErrorResponseBuilder().with_message("입력 정보가 올바르지 않습니다.").with_errors(serializer.errors).build()
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            response = ErrorResponseBuilder().with_message("버틀러 웨이포인트 상세 정보를 수정하는 중 오류가 발생했습니다.").with_errors(str(e)).build()
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @extend_schema(**ButlerSchema.delete_butler_waypoint())
+    def delete(self, request, waypoint_id):
+        try:
+            butler_way_point = ButlerWayPoint.objects.get(id=waypoint_id)
+            self.check_object_permissions(request, butler_way_point)
+            butler_way_point.delete()
+            response = SuccessResponseBuilder().with_message("버틀러 웨이포인트 삭제 성공").build()
+            return Response(response, status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            response = ErrorResponseBuilder().with_message("버틀러 웨이포인트 삭제하는 중 오류가 발생했습니다.").with_errors(str(e)).build()
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 

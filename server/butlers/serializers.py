@@ -112,7 +112,7 @@ class ButlerUserCouponSerializer(serializers.ModelSerializer):
 
 # Butler Serializer
 # <-------------------------------------------------------------------------------------------------------------------------------->
-class ButlerRequestWayPointSerializer(serializers.ModelSerializer):
+class ButlerWayPointSerializer(serializers.ModelSerializer):
     class Meta:
         model = ButlerWayPoint
         fields = ['id', 'address', 'scheduled_time']
@@ -125,8 +125,8 @@ class ButlerRequestSerializer(serializers.ModelSerializer):
     point_amount = serializers.IntegerField(write_only=True, required=False, allow_null=True)
     point_used = serializers.SerializerMethodField(read_only=True)
     payment_id = serializers.CharField(write_only=True, required=False, allow_null=True)
-    way_point_requests = ButlerRequestWayPointSerializer(write_only=True, required=False, allow_null=True, many=True)
-    way_points = ButlerRequestWayPointSerializer(source='butler_way_points', read_only=True, many=True)
+    way_point_requests = ButlerWayPointSerializer(write_only=True, required=False, allow_null=True, many=True)
+    way_points = ButlerWayPointSerializer(source='butler_way_points', read_only=True, many=True)
     
     class Meta:
         model = ButlerRequest
