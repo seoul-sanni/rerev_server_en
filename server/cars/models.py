@@ -68,8 +68,23 @@ class Model(models.Model):
 
 
 class Car(models.Model):
+    FUEL_TYPE_CHOICES = [
+        ('GASOLINE', 'Gasoline'),
+        ('DIESEL', 'Diesel'),
+        ('ELECTRIC', 'Electric'),
+        ('HYBRID', 'Hybrid'),
+        ('LPG', 'LPG'),
+    ]
+
+    TRANSMISSION_TYPE_CHOICES = [
+        ('MANUAL', 'Manual'),
+        ('AUTOMATIC', 'Automatic'),
+    ]
+
     model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='cars', verbose_name="Model")
     sub_model = models.CharField(blank=True, null=True, verbose_name="Sub Model")
+    fuel_type = models.CharField(verbose_name="Fuel Type", choices=FUEL_TYPE_CHOICES, default='GASOLINE')
+    transmission_type = models.CharField(verbose_name="Transmission Type", choices=TRANSMISSION_TYPE_CHOICES, default='AUTOMATIC')
     trim = models.CharField(blank=True, null=True, verbose_name="Trim")
     color = models.CharField(blank=True, null=True, verbose_name="Color")
     vin_number = models.CharField(max_length=36, unique=True, null=True, verbose_name="VIN Number")
@@ -97,6 +112,7 @@ class Car(models.Model):
     subscription_fee_72 = models.IntegerField(blank=True, null=True, verbose_name="Subscription Fee (72 month)")
     subscription_fee_84 = models.IntegerField(blank=True, null=True, verbose_name="Subscription Fee (84 month)")
     subscription_fee_96 = models.IntegerField(blank=True, null=True, verbose_name="Subscription Fee (96 month)")
+    subscription_overmileage_fee = models.IntegerField(blank=True, null=True, verbose_name="Subscription Overmileage Fee")
     subscription_fee_minimum = models.IntegerField(blank=True, null=True, verbose_name="Subscription Fee Minimum")
     subscription_available_from = models.DateField(blank=True, null=True, verbose_name="Subscription Available From")
 

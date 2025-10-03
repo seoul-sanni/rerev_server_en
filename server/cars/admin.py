@@ -52,7 +52,7 @@ class CarAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('model', 'sub_model', 'trim', 'color', 'vin_number', 'license_plate', 'description', 'images', 'inspection_report')
+            'fields': ('model', 'sub_model', 'fuel_type', 'transmission_type', 'trim', 'color', 'vin_number', 'license_plate', 'description', 'images', 'inspection_report')
         }),
         ('Vehicle Information', {
             'fields': ('retail_price', 'release_date', 'mileage')
@@ -62,7 +62,7 @@ class CarAdmin(admin.ModelAdmin):
         }),
         ('Subscription Information', {
             'fields': ('is_subscriptable', 'subscription_fee_1', 'subscription_fee_3', 'subscription_fee_6', 'subscription_fee_12', 'subscription_fee_24',
-            'subscription_fee_36', 'subscription_fee_48', 'subscription_fee_60', 'subscription_fee_72', 'subscription_fee_84', 'subscription_fee_96',
+            'subscription_fee_36', 'subscription_fee_48', 'subscription_fee_60', 'subscription_fee_72', 'subscription_fee_84', 'subscription_fee_96', 'subscription_overmileage_fee',
             'subscription_fee_minimum', 'subscription_available_from'
             )
         }),
