@@ -44,7 +44,7 @@ class SimpleSubscriptionCarSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Car
-        fields = ['id', 'model', 'sub_model', 'fuel_type', 'transmission_type', 'trim', 'color', 'vin_number', 'license_plate', 'description', 'images', 'inspection_report', 'retail_price', 'release_date', 'mileage', 'is_new', 'is_hot',
+        fields = ['id', 'model', 'sub_model', 'engine_size', 'fuel_type', 'transmission_type', 'drive_type', 'passenger_count', 'trim', 'color', 'vin_number', 'license_plate', 'description', 'images', 'inspection_report', 'retail_price', 'release_date', 'mileage', 'is_new', 'is_hot',
         'is_sellable', 'sell_price',
         'is_subscriptable', 'subscription_fee_1', 'subscription_fee_3', 'subscription_fee_6', 'subscription_fee_12', 'subscription_fee_24',
         'subscription_fee_36', 'subscription_fee_48', 'subscription_fee_60', 'subscription_fee_72', 'subscription_fee_84', 'subscription_fee_96',
@@ -55,7 +55,7 @@ class SimpleSubscriptionCarSerializer(serializers.ModelSerializer):
 class SubscriptionCarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Car
-        fields = ['id', 'sub_model', 'fuel_type', 'transmission_type', 'trim', 'color', 'vin_number', 'license_plate', 'description', 'images', 'inspection_report', 'retail_price', 'release_date', 'mileage', 'is_new', 'is_hot',
+        fields = ['id', 'sub_model', 'engine_size', 'fuel_type', 'transmission_type', 'drive_type', 'passenger_count', 'trim', 'color', 'vin_number', 'license_plate', 'description', 'images', 'inspection_report', 'retail_price', 'release_date', 'mileage', 'is_new', 'is_hot',
         'is_sellable', 'sell_price',
         'is_subscriptable', 'subscription_fee_1', 'subscription_fee_3', 'subscription_fee_6', 'subscription_fee_12', 'subscription_fee_24',
         'subscription_fee_36', 'subscription_fee_48', 'subscription_fee_60', 'subscription_fee_72', 'subscription_fee_84', 'subscription_fee_96',

@@ -52,7 +52,7 @@ class CarAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('model', 'sub_model', 'fuel_type', 'transmission_type', 'trim', 'color', 'vin_number', 'license_plate', 'description', 'images', 'inspection_report')
+            'fields': ('model', 'sub_model', 'engine_size', 'fuel_type', 'transmission_type', 'drive_type', 'passenger_count', 'trim', 'color', 'vin_number', 'license_plate', 'description', 'images', 'inspection_report')
         }),
         ('Vehicle Information', {
             'fields': ('retail_price', 'release_date', 'mileage')

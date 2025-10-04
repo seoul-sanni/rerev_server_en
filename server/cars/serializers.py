@@ -20,11 +20,11 @@ class CarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Car
         fields = [
-            'id', 'model', 'sub_model', 'trim', 'color', 'vin_number', 'license_plate', 'description', 'images', 'inspection_report', 'retail_price', 'release_date', 'mileage', 
+            'id', 'model', 'sub_model', 'engine_size', 'fuel_type', 'transmission_type', 'drive_type', 'passenger_count', 'trim', 'color', 'vin_number', 'license_plate', 'description', 'images', 'inspection_report', 'retail_price', 'release_date', 'mileage', 
             'is_sellable', 'sell_price',
             'is_subscriptable', 'subscription_available_from', 'subscription_fee_minimum', 'subscription_overmileage_fee',
             'subscription_fee_1', 'subscription_fee_3', 'subscription_fee_6', 'subscription_fee_12', 'subscription_fee_24',
             'subscription_fee_36', 'subscription_fee_48', 'subscription_fee_60', 'subscription_fee_72', 'subscription_fee_84', 'subscription_fee_96',
-            'is_butler', 'butler_price', 'butler_available_from', 'butler_reservated_dates',
+            'is_butler', 'butler_fee', 'butler_overtime_fee', 'butler_available_from', 'butler_reservated_dates',
             'created_at', 'modified_at', 'is_new', 'is_hot', 'is_active'
         ]

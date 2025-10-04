@@ -81,10 +81,19 @@ class Car(models.Model):
         ('AUTOMATIC', 'Automatic'),
     ]
 
+    DRIVE_TYPE_CHOICES = [
+        ('FWD', 'Front Wheel Drive'),
+        ('RWD', 'Rear Wheel Drive'),
+        ('AWD', 'All Wheel Drive'),
+    ]
+
     model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='cars', verbose_name="Model")
     sub_model = models.CharField(blank=True, null=True, verbose_name="Sub Model")
+    engine_size = models.IntegerField(blank=True, null=True, verbose_name="Engine Size")
     fuel_type = models.CharField(verbose_name="Fuel Type", choices=FUEL_TYPE_CHOICES, default='GASOLINE')
     transmission_type = models.CharField(verbose_name="Transmission Type", choices=TRANSMISSION_TYPE_CHOICES, default='AUTOMATIC')
+    drive_type = models.CharField(verbose_name="Drive Type", choices=DRIVE_TYPE_CHOICES, default='FWD')
+    passenger_count = models.IntegerField(verbose_name="Passenger Count", default=5)
     trim = models.CharField(blank=True, null=True, verbose_name="Trim")
     color = models.CharField(blank=True, null=True, verbose_name="Color")
     vin_number = models.CharField(max_length=36, unique=True, null=True, verbose_name="VIN Number")
