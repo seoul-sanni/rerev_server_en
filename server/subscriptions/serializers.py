@@ -5,7 +5,8 @@ from rest_framework import serializers
 
 from cars.models import Brand, Model, Car
 from users.models import PointTransaction
-from payments.utils import create_billing_key
+from payments.utils import create_toss_billing, create_portone_billing
+from payments.serializers import BillingSerializer
 from accounts.models import User
 
 from .models import Subscription, SubscriptionRequest, SubscriptionReview, SubscriptionModelRequest, SubscriptionCoupon, SubscriptionUserCoupon
@@ -126,11 +127,12 @@ class SubscriptionRequestSerializer(serializers.ModelSerializer):
     customer_key = serializers.CharField(write_only=True, required=False, allow_null=True)
     auth_key = serializers.CharField(write_only=True, required=False, allow_null=True)
     billing_key = serializers.CharField(write_only=True, required=False, allow_null=True)
+    billing = BillingSerializer(read_only=True)
     
     class Meta:
         model = SubscriptionRequest
-        fields = ['id', 'user', 'car', 'month', 'start_date', 'end_date', 'point_used', 'created_at', 'modified_at', 'coupon_id', 'coupon', 'is_active', 'point_amount', 'customer_key', 'auth_key', 'billing_key']
-        read_only_fields = ['id', 'user', 'car', 'point_used', 'end_date', 'created_at', 'modified_at', 'coupon', 'is_active']
+        fields = ['id', 'user', 'car', 'month', 'start_date', 'end_date', 'point_used', 'created_at', 'modified_at', 'coupon_id', 'coupon', 'is_active', 'point_amount', 'customer_key', 'auth_key', 'billing_key', 'billing']
+        read_only_fields = ['id', 'user', 'car', 'point_used', 'end_date', 'created_at', 'modified_at', 'coupon', 'billing', 'is_active']
     
     def get_point_used(self, obj):
         if obj.point:
@@ -138,42 +140,65 @@ class SubscriptionRequestSerializer(serializers.ModelSerializer):
         return None
     
     def create(self, validated_data):
+        # Billing
+        user = validated_data.get('user')
         auth_key = validated_data.pop('auth_key', None)
         customer_key = validated_data.pop('customer_key', None)
+        billing_key = validated_data.pop('billing_key', None)
         if auth_key and customer_key:
-            billing_key = create_billing_key(auth_key, customer_key)
-            validated_data['auth_key'] = auth_key
-            validated_data['customer_key'] = customer_key
-            validated_data['billing_key'] = billing_key
-
+            billing = create_toss_billing(user, auth_key, customer_key)
+        elif billing_key:
+            billing = create_portone_billing(user, billing_key)         
+        validated_data['billing'] = billing
+        
+        # Point
         point_amount = validated_data.pop('point_amount', None)
         if point_amount:
-            point_transaction = PointTransaction.objects.create(user=validated_data.get('user'), amount=-point_amount, transaction_type='SUBSCRIPTION')
+            point_transaction = PointTransaction.objects.create(user=user, amount=-point_amount, transaction_type='SUBSCRIPTION')
             validated_data['point'] = point_transaction
 
+        # Coupon
         coupon_id = validated_data.pop('coupon_id', None)
         user_coupon = None
         if coupon_id is not None:
             try:
-                user = validated_data.get('user')
                 user_coupon = SubscriptionUserCoupon.objects.get(id=coupon_id, user=user, is_active=True, used_at__isnull=True)
-                
                 if not user_coupon.is_valid:
                     raise serializers.ValidationError("Invalid or expired coupon")
-
             except SubscriptionUserCoupon.DoesNotExist:
                 raise serializers.ValidationError("Invalid or expired coupon")            
-        
-        subscription_request = SubscriptionRequest.objects.create(**validated_data, coupon=user_coupon)        
+        validated_data['coupon'] = user_coupon
+
+        # Subscription Request
+        subscription_request = SubscriptionRequest.objects.create(**validated_data)        
         return subscription_request
 
     def update(self, instance, validated_data):
+        # Point, Coupon not allowed to be updated
         validated_data.pop('point_amount', None)
         validated_data.pop('coupon_id', None)
-        
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         
+        # Billing is allowed to be updated
+        user = validated_data.get('user')
+        auth_key = validated_data.pop('auth_key', None)
+        customer_key = validated_data.pop('customer_key', None)
+        billing_key = validated_data.pop('billing_key', None)
+        if auth_key and customer_key:
+            billing = create_toss_billing(user, auth_key, customer_key)
+            if instance.billing:
+                instance.billing.is_active = False
+                instance.billing.save()
+            validated_data['billing'] = billing
+        elif billing_key:
+            billing = create_portone_billing(user, billing_key)         
+            if instance.billing:
+                instance.billing.is_active = False
+                instance.billing.save()
+            validated_data['billing'] = billing
+
+        # Subscription Request
         instance.save()
         return instance
 

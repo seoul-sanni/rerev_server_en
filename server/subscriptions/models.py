@@ -9,8 +9,9 @@ from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
-from accounts.models import User
 from cars.models import Car, Model
+from accounts.models import User
+from payments.models import Billing
 
 class SubscriptionCoupon(models.Model):
     TYPE_CHOICES = [
@@ -226,12 +227,10 @@ class SubscriptionRequest(models.Model):
     start_date = models.DateField(verbose_name="Start Date", null=True, blank=True)
     month = models.IntegerField(verbose_name="Month")
     end_date = models.DateField(verbose_name="End Date", null=True, blank=True)
-    coupon = models.ForeignKey(SubscriptionUserCoupon, on_delete=models.CASCADE, related_name='subscription_requests', null=True, blank=True)
-    point = models.ForeignKey('users.PointTransaction', on_delete=models.CASCADE, related_name='subscription_requests', null=True, blank=True)
+    coupon = models.OneToOneField(SubscriptionUserCoupon, on_delete=models.CASCADE, related_name='subscription_requests', null=True, blank=True)
+    point = models.OneToOneField('users.PointTransaction', on_delete=models.CASCADE, related_name='subscription_requests', null=True, blank=True)
 
-    auth_key = models.CharField(max_length=255, null=True, blank=True)
-    customer_key = models.CharField(max_length=255, unique=True, null=True, blank=True)
-    billing_key = models.CharField(max_length=255, null=True, blank=True)
+    billing = models.ForeignKey(Billing, on_delete=models.CASCADE, related_name='subscription_requests', null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
@@ -241,7 +240,6 @@ class SubscriptionRequest(models.Model):
     class Meta:
         verbose_name = "Subscription Request"
         verbose_name_plural = "Subscription Requests"
-        unique_together = [('user', 'coupon'), ('user', 'point')]
 
     def clean(self):
         if self.coupon:
@@ -268,6 +266,7 @@ class Subscription(models.Model):
     request = models.ForeignKey(SubscriptionRequest, on_delete=models.CASCADE, related_name='subscriptions')
     start_date = models.DateField(verbose_name="Start Date", null=True, blank=True)
     end_date = models.DateField(verbose_name="End Date", null=True, blank=True)
+    last_payment_date = models.DateTimeField(verbose_name="Last Payment Date", null=True, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
     modified_at = models.DateTimeField(auto_now=True, verbose_name="Modified At")
@@ -286,6 +285,9 @@ class Subscription(models.Model):
     def save(self, *args, **kwargs):
         if not self.start_date:
             self.start_date = timezone.now().date()
+        
+        if not self.end_date and self.start_date and self.request.month:
+            self.end_date = self.start_date + timedelta(days=30 * self.request.month)
             
         super().save(*args, **kwargs)
 

@@ -25,7 +25,7 @@ class SubscriptionRequestAdmin(admin.ModelAdmin):
             'fields': ('point',)
         }),
         ('Billing Information', {
-            'fields': ('auth_key', 'customer_key', 'billing_key',)
+            'fields': ('billing',)
         }),
         ('Status Information', {
             'fields': ('is_active',)
@@ -44,7 +44,7 @@ class SubscriptionRequestAdmin(admin.ModelAdmin):
 
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
-    list_display = ['id', 'request', 'start_date', 'end_date', 'is_current', 'duration_days', 'is_active']
+    list_display = ['id', 'request', 'start_date', 'end_date', 'last_payment_date', 'is_current', 'duration_days', 'is_active']
     list_filter = ['is_active', 'start_date', 'end_date', 'created_at', 'modified_at']
     search_fields = ['request__user__username', 'request__user__email', 'request__car__model__name', 'request__car__model__brand__name', 'request__car__vin_number']
     readonly_fields = ['created_at', 'modified_at', 'is_current', 'duration_days']
@@ -52,7 +52,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('request', 'start_date', 'end_date')
+            'fields': ('request', 'start_date', 'end_date', 'last_payment_date')
         }),
         ('Status Information', {
             'fields': ('is_active', 'is_current', 'duration_days')
