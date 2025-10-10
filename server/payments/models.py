@@ -10,6 +10,34 @@ VENDER_CHOICES = [
     ('PORTONE', 'PortOne'),
 ]
 
+
+class Billing(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='billings')
+    vender = models.CharField(max_length=20, choices=VENDER_CHOICES)
+    customer_key = models.CharField(max_length=255, null=True, blank=True)
+    billing_key = models.CharField(max_length=255)
+
+    card_company = models.CharField(max_length=50, null=True, blank=True)
+    card_number = models.CharField(max_length=20, null=True, blank=True)
+    card_type = models.CharField(max_length=10, null=True, blank=True)
+    card_owner_type = models.CharField(max_length=10, null=True, blank=True)
+    card_issuer_code = models.CharField(max_length=2, null=True, blank=True)
+    card_acquirer_code = models.CharField(max_length=2, null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'Billing'
+        verbose_name_plural = 'Billings'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.name} {self.card_company} - {self.card_number}"
+
+
 class Payment(models.Model):
     STATUS_CHOICES = [
         ('READY', 'Ready'),
@@ -29,7 +57,7 @@ class Payment(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='payments', null=True, blank=True)
-    billing = models.ForeignKey('payments.Billing', on_delete=models.SET_NULL, related_name='payments', null=True, blank=True)
+    billing = models.ForeignKey(Billing, on_delete=models.SET_NULL, related_name='payments', null=True, blank=True)
     butler = models.ForeignKey('butlers.Butler', on_delete=models.SET_NULL, related_name='payments', null=True, blank=True)
     subscription = models.ForeignKey('subscriptions.Subscription', on_delete=models.SET_NULL, related_name='payments', null=True, blank=True)
     vender = models.CharField(max_length=20, choices=VENDER_CHOICES)
@@ -39,7 +67,7 @@ class Payment(models.Model):
     type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     order_id = models.CharField(max_length=64)
     order_name = models.CharField(max_length=100)
-    merchant_id = models.CharField(max_length=14)
+    merchant_id = models.CharField(max_length=64)
     
     currency = models.CharField(max_length=20)
     method = models.CharField(max_length=20, null=True, blank=True)
@@ -98,30 +126,3 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"{self.order_name} - {self.status} ({self.total_amount:,}원)"
-
-
-class Billing(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='billings')
-    vender = models.CharField(max_length=20, choices=VENDER_CHOICES)
-    customer_key = models.CharField(max_length=255, null=True, blank=True)
-    billing_key = models.CharField(max_length=255)
-
-    card_company = models.CharField(max_length=50, null=True, blank=True)
-    card_number = models.CharField(max_length=20, null=True, blank=True)
-    card_type = models.CharField(max_length=10, null=True, blank=True)
-    card_owner_type = models.CharField(max_length=10, null=True, blank=True)
-    card_issuer_code = models.CharField(max_length=2, null=True, blank=True)
-    card_acquirer_code = models.CharField(max_length=2, null=True, blank=True)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True)
-
-    is_active = models.BooleanField(default=True)
-
-    class Meta:
-        verbose_name = 'Billing'
-        verbose_name_plural = 'Billings'
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"{self.user.name} {self.card_company} - {self.card_number}"

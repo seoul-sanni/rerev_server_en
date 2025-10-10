@@ -12,6 +12,7 @@ from django.core.exceptions import ValidationError
 from cars.models import Car, Model
 from accounts.models import User
 from payments.models import Billing
+from payments.utils import payment_billing
 
 class SubscriptionCoupon(models.Model):
     TYPE_CHOICES = [
@@ -278,9 +279,68 @@ class Subscription(models.Model):
         verbose_name_plural = "Subscriptions"
         ordering = ['-created_at']
 
+    def payment(self):
+        if self.request.billing:
+            month = self.request.month
+            car = self.request.car
+            
+            if month >= 96 and car.subscription_fee_96:
+                base_amount = car.subscription_fee_96
+            elif month >= 84 and car.subscription_fee_84:
+                base_amount = car.subscription_fee_84
+            elif month >= 72 and car.subscription_fee_72:
+                base_amount = car.subscription_fee_72
+            elif month >= 60 and car.subscription_fee_60:
+                base_amount = car.subscription_fee_60
+            elif month >= 48 and car.subscription_fee_48:
+                base_amount = car.subscription_fee_48
+            elif month >= 36 and car.subscription_fee_36:
+                base_amount = car.subscription_fee_36
+            elif month >= 24 and car.subscription_fee_24:
+                base_amount = car.subscription_fee_24
+            elif month >= 12 and car.subscription_fee_12:
+                base_amount = car.subscription_fee_12
+            elif month >= 6 and car.subscription_fee_6:
+                base_amount = car.subscription_fee_6
+            elif month >= 3 and car.subscription_fee_3:
+                base_amount = car.subscription_fee_3
+            elif month >= 1 and car.subscription_fee_1:
+                base_amount = car.subscription_fee_1
+            else:
+                raise ValidationError(f"해당 차량({car.model.brand.name} {car.model.name})의 {month}개월 구독료 정보가 없습니다.")
+            
+            if self.request.coupon:
+                coupon = self.request.coupon.coupon
+                if coupon.discount_type == 'PERCENTAGE':
+                    discount = int(base_amount * (coupon.discount_rate / 100))
+                    discount_amount = min(discount, coupon.max_discount)
+                    base_amount -= discount_amount
+                elif coupon.discount_type == 'FIXED':
+                    base_amount -= coupon.discount
+                elif coupon.discount_type == 'FREE':
+                    base_amount = 0
+            
+            if self.request.point:
+                point_amount = self.request.point.amount
+                base_amount -= point_amount
+            
+            amount = max(0, base_amount)
+            order_name = f"{self.request.car.model.brand.name} {self.request.car.model.name} ({self.start_date} ~ {self.end_date})"
+            payment_result = payment_billing(self.request.user, self.request.billing, amount, order_name)
+            self.last_payment_date = timezone.now()
+            return payment_result
+
     def clean(self):
         if self.start_date and self.end_date and self.start_date >= self.end_date:
             raise ValidationError("시작일은 종료일보다 이전이어야 합니다.")
+        
+        if not self.pk:
+            try:
+                payment_result = self.payment()
+                self._payment_result = payment_result
+            except Exception as e:
+                print(f"결제 처리 실패: {str(e)}")
+                raise ValidationError(f"결제 처리 실패: {str(e)}")
 
     def save(self, *args, **kwargs):
         if not self.start_date:
@@ -288,8 +348,12 @@ class Subscription(models.Model):
         
         if not self.end_date and self.start_date and self.request.month:
             self.end_date = self.start_date + timedelta(days=30 * self.request.month)
-            
+
         super().save(*args, **kwargs)
+        
+        if hasattr(self, '_payment_result'):
+            self._payment_result.subscription = self
+            self._payment_result.save()
 
     def __str__(self):
         return f"{self.request.user.username} - {self.request.car.model.brand.name} {self.request.car.model.name} ({self.start_date} ~ {self.end_date})"
