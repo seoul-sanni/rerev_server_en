@@ -14,7 +14,7 @@ class BrandAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name', 'slug', 'description', 'image')
+            'fields': ('name', 'slug', 'is_imported', 'description', 'image')
         }),
         ('System Information', {
             'fields': ('created_at', 'modified_at'),
@@ -46,7 +46,7 @@ class CarAdmin(admin.ModelAdmin):
     list_display = ['id', 'model', 'sub_model', 'license_plate', 'is_sellable', 'is_subscriptable', 'is_butler', 'is_new', 'is_hot', 'is_active']
     list_filter = ['is_sellable', 'is_subscriptable', 'is_new', 'is_hot', 'is_active', 'release_date', 'created_at', 'modified_at']
     search_fields = ['vin_number', 'license_plate', 'model__name', 'model__brand__name', 'description']
-    readonly_fields = ['subscription_fee_minimum', 'subscription_available_from', 'butler_reservated_dates', 'butler_available_from', 'created_at', 'modified_at']
+    readonly_fields = ['tax', 'acquisition_tax', 'subscription_fee_minimum', 'subscription_available_from', 'butler_reservated_dates', 'butler_available_from', 'created_at', 'modified_at']
     autocomplete_fields = ['model']
     list_editable = ['is_sellable', 'is_subscriptable', 'is_butler', 'is_new', 'is_hot', 'is_active']
     
@@ -55,7 +55,7 @@ class CarAdmin(admin.ModelAdmin):
             'fields': ('model', 'sub_model', 'engine_size', 'fuel_type', 'transmission_type', 'drive_type', 'passenger_count', 'trim', 'color', 'vin_number', 'license_plate', 'description', 'images', 'inspection_report')
         }),
         ('Vehicle Information', {
-            'fields': ('retail_price', 'release_date', 'mileage')
+            'fields': ('retail_price', 'release_date', 'tax', 'acquisition_tax', 'mileage')
         }),
         ('Sell Information', {
             'fields': ('is_sellable', 'sell_price')

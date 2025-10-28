@@ -1,6 +1,8 @@
 # cars/models.py
 app_name = 'cars'
 
+from datetime import date
+
 from django.db import models
 from django.utils.text import slugify
 from django.core.exceptions import ValidationError
@@ -10,6 +12,7 @@ class Brand(models.Model):
     slug = models.SlugField(max_length=100, unique=True, verbose_name="Brand Slug", null=False, blank=True)
     description = models.TextField(blank=True, null=True, verbose_name="Description")
     image = models.URLField(blank=True, null=True, verbose_name="Brand Image URL")
+    is_imported = models.BooleanField(default=False, verbose_name="Is Imported")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
     modified_at = models.DateTimeField(auto_now=True, verbose_name="Modified At")
 
@@ -89,7 +92,7 @@ class Car(models.Model):
 
     model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='cars', verbose_name="Model")
     sub_model = models.CharField(blank=True, null=True, verbose_name="Sub Model")
-    engine_size = models.IntegerField(blank=True, null=True, verbose_name="Engine Size")
+    engine_size = models.IntegerField(verbose_name="Engine Size", default=2000)
     fuel_type = models.CharField(verbose_name="Fuel Type", choices=FUEL_TYPE_CHOICES, default='GASOLINE')
     transmission_type = models.CharField(verbose_name="Transmission Type", choices=TRANSMISSION_TYPE_CHOICES, default='AUTOMATIC')
     drive_type = models.CharField(verbose_name="Drive Type", choices=DRIVE_TYPE_CHOICES, default='FWD')
@@ -103,10 +106,12 @@ class Car(models.Model):
     inspection_report = models.URLField(blank=True, null=True, verbose_name="Inspection Report")
 
     retail_price = models.IntegerField(verbose_name="Retail Price")
+    release_date = models.DateField(blank=True, null=True, verbose_name="Release Date")
+    tax = models.IntegerField(blank=True, null=True, verbose_name="Tax")
+    acquisition_tax = models.IntegerField(blank=True, null=True, verbose_name="Acquisition Tax")
     mileage = models.IntegerField(default=0, verbose_name="Mileage")
-    release_date = models.DateTimeField(blank=True, null=True, verbose_name="Release Date")
 
-    is_sellable = models.BooleanField(default=True, verbose_name="Is Sellable")
+    is_sellable = models.BooleanField(default=False, verbose_name="Is Sellable")
     sell_price = models.IntegerField(blank=True, null=True, verbose_name="Sell Price")
 
     is_subscriptable = models.BooleanField(default=False, verbose_name="Is Subscriptable")
@@ -178,7 +183,42 @@ class Car(models.Model):
 
         self.subscription_fee_minimum = 0
 
+    def calculate_car_age(self):
+        if not self.release_date:
+            return 1
+        today = date.today()
+        age = today.year - self.release_date.year
+        if today.month < self.release_date.month or (today.month == self.release_date.month and today.day < self.release_date.day):
+            age -= 1
+        return max(1, age)
+    
+    def calculate_tax(self):
+        if self.fuel_type == 'ELECTRIC':
+            return 260000
+
+        if self.engine_size <= 1000:
+            base_tax = self.engine_size * 80 * 1.3
+        elif self.engine_size <= 1600:
+            base_tax = self.engine_size * 140 * 1.3
+        else:
+            base_tax = self.engine_size * 200 * 1.3
+        age = self.calculate_car_age()
+        discount_table = {1: 1.0, 2: 1.0, 3: 0.95, 4: 0.90, 5: 0.85, 6: 0.80, 7: 0.75, 8: 0.70, 9: 0.65, 10: 0.60, 11: 0.55, 12: 0.50}
+        age = min(age, 12)
+        return int(base_tax * discount_table[age])
+    
+    def calculate_acquisition_tax(self):
+        age = self.calculate_car_age()
+        if self.model.brand.is_imported:
+            discount_table = {1: 0.729, 2: 0.605, 3: 0.5, 4: 0.412, 5: 0.34, 6: 0.281, 7: 0.232, 8: 0.172, 9: 0.142, 10: 0.117, 11: 0.097, 12: 0.08, 13:0.066, 14:0.054, 15:0.05, 16:0.048, 17:0.046, 18:0.044, 19:0.042, 20:0.04}
+        else:
+            discount_table = {1: 0.725, 2: 0.614, 3: 0.518, 4: 0.437, 5: 0.368, 6: 0.311, 7: 0.262, 8: 0.221, 9: 0.186, 10: 0.157, 11: 0.132, 12: 0.112, 13: 0.094, 14: 0.079, 15: 0.067, 16: 0.063, 17: 0.06, 18: 0.057, 19: 0.053, 20: 0.05}
+        age = min(age, 20)
+        return int(self.retail_price * discount_table[age] * 0.07)
+
     def save(self, *args, **kwargs):
+        self.tax = self.calculate_tax()
+        self.acquisition_tax = self.calculate_acquisition_tax()
         self.full_clean()
         super().save(*args, **kwargs)
     
