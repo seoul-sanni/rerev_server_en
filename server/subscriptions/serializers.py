@@ -180,7 +180,7 @@ class SubscriptionRequestSerializer(serializers.ModelSerializer):
 
         # Payment
         payment_key = validated_data.pop('payment_key', None)
-        order_id = validated_data.pop('order_id')
+        order_id = validated_data.pop('order_id', None)
         month = validated_data.get('month')
         exchange_rate = validated_data.pop('exchange_rate', 1)
 
