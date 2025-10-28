@@ -11,7 +11,7 @@ from django.core.exceptions import ValidationError
 
 from cars.models import Car, Model
 from accounts.models import User
-from payments.models import Billing
+from payments.models import Billing, Payment
 from payments.utils import payment_billing
 
 class SubscriptionCoupon(models.Model):
@@ -232,6 +232,7 @@ class SubscriptionRequest(models.Model):
     point = models.OneToOneField('users.PointTransaction', on_delete=models.CASCADE, related_name='subscription_requests', null=True, blank=True)
 
     billing = models.ForeignKey(Billing, on_delete=models.CASCADE, related_name='subscription_requests', null=True, blank=True)
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE, related_name='subscription_requests', null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
@@ -351,9 +352,13 @@ class Subscription(models.Model):
 
         super().save(*args, **kwargs)
         
-        if hasattr(self, '_payment_result'):
+        if hasattr(self, '_payment_result') and self._payment_result:
             self._payment_result.subscription = self
             self._payment_result.save()
+        
+        if self.request.payment:
+            self.request.payment.subscription = self
+            self.request.payment.save()
 
     def __str__(self):
         return f"{self.request.user.username} - {self.request.car.model.brand.name} {self.request.car.model.name} ({self.start_date} ~ {self.end_date})"

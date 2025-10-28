@@ -5,8 +5,8 @@ from rest_framework import serializers
 
 from cars.models import Brand, Model, Car
 from users.models import PointTransaction
-from payments.utils import create_toss_billing, create_portone_billing
-from payments.serializers import BillingSerializer
+from payments.utils import create_toss_billing, create_portone_billing, confirm_toss_payment
+from payments.serializers import BillingSerializer, PaymentSerializer
 from accounts.models import User
 
 from .models import Subscription, SubscriptionRequest, SubscriptionReview, SubscriptionModelRequest, SubscriptionCoupon, SubscriptionUserCoupon
@@ -128,11 +128,19 @@ class SubscriptionRequestSerializer(serializers.ModelSerializer):
     auth_key = serializers.CharField(write_only=True, required=False, allow_null=True)
     billing_key = serializers.CharField(write_only=True, required=False, allow_null=True)
     billing = BillingSerializer(read_only=True)
-    
+    payment_key = serializers.CharField(write_only=True, required=False, allow_null=True)
+    payment = PaymentSerializer(read_only=True)
+    order_id = serializers.CharField(write_only=True, required=False, allow_null=True)
+    exchange_rate = serializers.CharField(write_only=True, required=False, allow_null=True)
+
     class Meta:
         model = SubscriptionRequest
-        fields = ['id', 'user', 'car', 'month', 'start_date', 'end_date', 'point_used', 'created_at', 'modified_at', 'coupon_id', 'coupon', 'is_active', 'point_amount', 'customer_key', 'auth_key', 'billing_key', 'billing']
-        read_only_fields = ['id', 'user', 'car', 'point_used', 'end_date', 'created_at', 'modified_at', 'coupon', 'billing', 'is_active']
+        fields = [
+            'id', 'user', 'car', 'month', 'start_date', 'end_date', 'point_used', 'created_at', 'modified_at', 'coupon_id', 'coupon', 'is_active', 'point_amount',
+            'customer_key', 'auth_key', 'billing_key', 'billing',
+            'payment_key', 'payment', 'order_id', 'exchange_rate'
+        ]
+        read_only_fields = ['id', 'user', 'car', 'point_used', 'end_date', 'created_at', 'modified_at', 'coupon', 'billing', 'payment', 'is_active']
     
     def get_point_used(self, obj):
         if obj.point:
@@ -147,10 +155,11 @@ class SubscriptionRequestSerializer(serializers.ModelSerializer):
         billing_key = validated_data.pop('billing_key', None)
         if auth_key and customer_key:
             billing = create_toss_billing(user, auth_key, customer_key)
+            validated_data['billing'] = billing
         elif billing_key:
             billing = create_portone_billing(user, billing_key)         
-        validated_data['billing'] = billing
-        
+            validated_data['billing'] = billing
+                
         # Point
         point_amount = validated_data.pop('point_amount', None)
         if point_amount:
@@ -169,8 +178,65 @@ class SubscriptionRequestSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Invalid or expired coupon")            
         validated_data['coupon'] = user_coupon
 
-        # Subscription Request
+        # Payment
+        payment_key = validated_data.pop('payment_key', None)
+        order_id = validated_data.pop('order_id')
+        month = validated_data.get('month')
+        exchange_rate = validated_data.pop('exchange_rate', 1)
+
         subscription_request = SubscriptionRequest.objects.create(**validated_data)        
+
+        if payment_key:
+            car = subscription_request.car
+            
+            # Match month to subscription fee
+            if month >= 96 and car.subscription_fee_96:
+                base_amount_per_month = car.subscription_fee_96
+            elif month >= 84 and car.subscription_fee_84:
+                base_amount_per_month = car.subscription_fee_84
+            elif month >= 72 and car.subscription_fee_72:
+                base_amount_per_month = car.subscription_fee_72
+            elif month >= 60 and car.subscription_fee_60:
+                base_amount_per_month = car.subscription_fee_60
+            elif month >= 48 and car.subscription_fee_48:
+                base_amount_per_month = car.subscription_fee_48
+            elif month >= 36 and car.subscription_fee_36:
+                base_amount_per_month = car.subscription_fee_36
+            elif month >= 24 and car.subscription_fee_24:
+                base_amount_per_month = car.subscription_fee_24
+            elif month >= 12 and car.subscription_fee_12:
+                base_amount_per_month = car.subscription_fee_12
+            elif month >= 6 and car.subscription_fee_6:
+                base_amount_per_month = car.subscription_fee_6
+            elif month >= 3 and car.subscription_fee_3:
+                base_amount_per_month = car.subscription_fee_3
+            elif month >= 1 and car.subscription_fee_1:
+                base_amount_per_month = car.subscription_fee_1
+            else:
+                raise serializers.ValidationError(f"해당 차량({car.model.brand.name} {car.model.name})의 {month}개월 구독료 정보가 없습니다.")
+            
+            # Apply coupon discount first
+            discounted_amount_per_month = base_amount_per_month
+            if user_coupon:
+                coupon = user_coupon.coupon
+                if coupon.discount_type == 'PERCENTAGE':
+                    discount = int(base_amount_per_month * (coupon.discount_rate / 100))
+                    discount_amount = min(discount, coupon.max_discount)
+                    discounted_amount_per_month -= discount_amount
+                elif coupon.discount_type == 'FIXED':
+                    discounted_amount_per_month -= coupon.discount
+                elif coupon.discount_type == 'FREE':
+                    discounted_amount_per_month = 0
+            
+            # Apply point discount to first month
+            first_month_amount = max(0, discounted_amount_per_month - (point_amount if point_amount else 0))
+            remaining_months = max(0, month - 1)
+            amount = first_month_amount + (remaining_months * discounted_amount_per_month)
+            payment = confirm_toss_payment(user, payment_key, int(amount)*int(exchange_rate), order_id)
+            subscription_request.payment = payment
+
+        # Subscription Request
+        subscription_request.save()
         return subscription_request
 
     def update(self, instance, validated_data):

@@ -27,6 +27,9 @@ class SubscriptionRequestAdmin(admin.ModelAdmin):
         ('Billing Information', {
             'fields': ('billing',)
         }),
+        ('Payment Information', {
+            'fields': ('payment',)
+        }),
         ('Status Information', {
             'fields': ('is_active',)
         }),
