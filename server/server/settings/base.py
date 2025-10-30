@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',     # JWT
     'corsheaders',                  # CORS
+    'django_crontab',               # Crontab
     'drf_spectacular',              # Swagger
 
     # My apps
