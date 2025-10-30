@@ -56,6 +56,7 @@ services:
       - redis
     networks:
       - network
+      - rerev_db_network                  # Internal DB Server
 
   celery_beat:
     build: ./server/.
@@ -71,6 +72,7 @@ services:
       - celery
     networks:
       - network
+      - rerev_db_network                  # Internal DB Server
 
 networks:
   network:
