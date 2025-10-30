@@ -15,7 +15,7 @@ from drf_spectacular.utils import extend_schema
 from server.utils import SuccessResponseBuilder, ErrorResponseBuilder
 from cars.models import Brand, Model, Car
 
-from .task import send_subscription_email
+from .tasks import send_subscription_email
 from .models import Subscription, SubscriptionRequest, SubscriptionLike, SubscriptionReview, SubscriptionReviewLike, SubscriptionCoupon, SubscriptionUserCoupon
 from .serializers import SimpleSubscriptionModelSerializer, SubscriptionModelListSerializer, SubscriptionModelDetailSerializer, SubscriptionCarDetailSerializer
 from .serializers import SubscriptionSerializer, SubscriptionRequestSerializer

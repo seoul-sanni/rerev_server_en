@@ -26,7 +26,7 @@ from server.utils import SuccessResponseBuilder, ErrorResponseBuilder
 from butlers.models import Butler, ButlerRequest
 from subscriptions.models import Subscription, SubscriptionRequest
 
-from .task import send_verification_email, send_verification_sms
+from .tasks import send_verification_email, send_verification_sms
 from .utils import AuthResponseBuilder, NaverResponse, KakaoResponse, GoogleResponse, PortOneResponse
 from .models import User, Verification, UserSocialAccount
 from .serializers import UserSerializer, SignUpSerializer, VerificationCheckSerializer, VerificationRequestSerializer, SocialSignUpSerializer

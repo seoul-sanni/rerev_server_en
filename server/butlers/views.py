@@ -14,7 +14,7 @@ from drf_spectacular.utils import extend_schema
 from server.utils import SuccessResponseBuilder, ErrorResponseBuilder
 from cars.models import Brand, Model, Car
 
-from .task import send_butler_email
+from .tasks import send_butler_email
 from .models import Butler, ButlerRequest, ButlerWayPoint, ButlerLike, ButlerReview, ButlerReviewLike, ButlerCoupon, ButlerUserCoupon
 from .serializers import ButlerModelListSerializer, ButlerModelDetailSerializer, ButlerCarDetailSerializer, SimpleButlerModelSerializer
 from .serializers import ButlerSerializer, ButlerRequestSerializer, ButlerWayPointSerializer

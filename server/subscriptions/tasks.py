@@ -1,4 +1,4 @@
-# subscriptions/task.py
+# subscriptions/tasks.py
 app_name = "subscriptions"
 
 from celery import shared_task
