@@ -161,6 +161,13 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 
 
+# Crontab
+CRONJOBS = [
+    ('0 9 * * *', 'subscriptions.cron.perform_billing', '>> '+str(BASE_DIR)+'/cron.log'),
+    ('0 18 * * *', 'subscriptions.cron.perform_billing', '>> '+str(BASE_DIR)+'/cron.log')
+]
+
+
 # Social
 NAVER_CLIENT_ID = os.getenv('NAVER_CLIENT_ID')
 NAVER_CLIENT_SECRET = os.getenv('NAVER_CLIENT_SECRET')

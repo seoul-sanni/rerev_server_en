@@ -310,22 +310,26 @@ class Subscription(models.Model):
             else:
                 raise ValidationError(f"해당 차량({car.model.brand.name} {car.model.name})의 {month}개월 구독료 정보가 없습니다.")
             
-            if self.request.coupon:
-                coupon = self.request.coupon.coupon
-                if coupon.discount_type == 'PERCENTAGE':
-                    discount = int(base_amount * (coupon.discount_rate / 100))
-                    discount_amount = min(discount, coupon.max_discount)
-                    base_amount -= discount_amount
-                elif coupon.discount_type == 'FIXED':
-                    base_amount -= coupon.discount
-                elif coupon.discount_type == 'FREE':
-                    base_amount = 0
-            
-            if self.request.point:
-                point_amount = self.request.point.amount
-                base_amount -= point_amount
-            
-            amount = max(0, base_amount)
+            if self.last_payment_date is None:
+                if self.request.coupon:
+                    coupon = self.request.coupon.coupon
+                    if coupon.discount_type == 'PERCENTAGE':
+                        discount = int(base_amount * (coupon.discount_rate / 100))
+                        discount_amount = min(discount, coupon.max_discount)
+                        base_amount -= discount_amount
+                    elif coupon.discount_type == 'FIXED':
+                        base_amount -= coupon.discount
+                    elif coupon.discount_type == 'FREE':
+                        base_amount = 0
+                
+                if self.request.point:
+                    point_amount = self.request.point.amount
+                    base_amount -= point_amount
+                
+                amount = max(0, base_amount)
+            else: 
+                amount = base_amount
+
             order_name = f"{self.request.car.model.brand.name} {self.request.car.model.name} ({self.start_date} ~ {self.end_date})"
             payment_result = payment_billing(self.request.user, self.request.billing, amount, order_name)
             self.last_payment_date = timezone.now()
