@@ -9,9 +9,6 @@ services:
       - DJANGO_SETTINGS_MODULE=server.settings.deploy
     command: bash -c "
       python3 manage.py migrate &&
-      python3 manage.py crontab remove &&
-      python3 manage.py crontab add &&
-      python3 manage.py crontab show &&
       gunicorn --bind unix:/tmp/gunicorn.sock server.wsgi.deploy:application"
     volumes:
       - tmp:/tmp/

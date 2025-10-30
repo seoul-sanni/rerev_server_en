@@ -10,8 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os, dotenv
+
 from pathlib import Path
 from datetime import timedelta
+
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,7 +42,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',     # JWT
     'corsheaders',                  # CORS
-    'django_crontab',               # Crontab
     'drf_spectacular',              # Swagger
 
     # My apps
@@ -160,13 +162,12 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 # Celery
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
-
-
-# Crontab
-CRONJOBS = [
-    ('0 9 * * *', 'subscriptions.cron.perform_billing', '>> '+str(BASE_DIR)+'/cron.log'),
-    ('0 18 * * *', 'subscriptions.cron.perform_billing', '>> '+str(BASE_DIR)+'/cron.log')
-]
+CELERY_BEAT_SCHEDULE = {
+    'run_daily_billing': {
+        'task': 'subscriptions.tasks.perform_billing',
+        'schedule': crontab(hour='12,18' , minute=0),
+    },
+}
 
 
 # Social
