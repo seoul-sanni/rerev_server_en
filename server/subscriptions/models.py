@@ -269,6 +269,7 @@ class Subscription(models.Model):
     start_date = models.DateField(verbose_name="Start Date", null=True, blank=True)
     end_date = models.DateField(verbose_name="End Date", null=True, blank=True)
     last_payment_date = models.DateTimeField(verbose_name="Last Payment Date", null=True, blank=True)
+    schedule_payment_date = models.DateField(verbose_name="Schedule Payment Date", null=True, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
     modified_at = models.DateTimeField(auto_now=True, verbose_name="Modified At")
@@ -359,6 +360,8 @@ class Subscription(models.Model):
         if hasattr(self, '_payment_result') and self._payment_result:
             self._payment_result.subscription = self
             self._payment_result.save()
+            self.schedule_payment_date = self.start_date + timedelta(days=31)
+            super().save(update_fields=["schedule_payment_date"])
         
         if self.request.payment:
             self.request.payment.subscription = self
