@@ -57,6 +57,21 @@ services:
     networks:
       - network
 
+  celery_beat:
+    build: ./server/.
+    container_name: celery_beat01
+    restart: always
+    command: celery -A server beat -l info
+    environment:
+      - DJANGO_SETTINGS_MODULE=server.settings.deploy
+    volumes:
+      - tmp:/tmp/
+    depends_on:
+      - redis
+      - celery
+    networks:
+      - network
+
 networks:
   network:
   rerev_db_network:                        # Internal DB Server (Remove if External)
