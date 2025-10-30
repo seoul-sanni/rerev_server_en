@@ -39,7 +39,7 @@ def perform_billing():
     for subscription in subscriptions:
         try:
             payment_result = subscription.payment()
-            subscription.schedule_payment_date = subscription.start_date + timedelta(days=31)
+            subscription.schedule_payment_date = subscription.start_date + timedelta(days=30)
             subscription.save(update_fields=["last_payment_date", "schedule_payment_date", "modified_at"])
 
             if payment_result:

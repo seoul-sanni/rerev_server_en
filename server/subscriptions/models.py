@@ -360,7 +360,7 @@ class Subscription(models.Model):
         if hasattr(self, '_payment_result') and self._payment_result:
             self._payment_result.subscription = self
             self._payment_result.save()
-            self.schedule_payment_date = self.start_date + timedelta(days=31)
+            self.schedule_payment_date = self.start_date + timedelta(days=30)
             super().save(update_fields=["schedule_payment_date"])
         
         if self.request.payment:
